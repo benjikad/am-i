@@ -107,14 +107,12 @@ function addUserMessage(username, data) {
   });
 
   console.log(`Added message for user ${username}:`, data);
-  console.log(`Current messages for ${username}:`, userMessages.get(username));
 }
 
 function handleCodeExecuted(username, messageId, ranSuccessfully) {
   console.log(`Handling execution notification: ${username}, ${messageId}, ${ranSuccessfully}`);
   
   if (!userMessages.has(username)) {
-    console.log(`No messages found for user: ${username}`);
     return false;
   }
   
@@ -128,7 +126,7 @@ function handleCodeExecuted(username, messageId, ranSuccessfully) {
     console.log(`Updated message ${messageId} for user ${username} - ran: ${ranSuccessfully}`);
     
     // IMMEDIATE REMOVAL OPTION: Uncomment the line below to remove immediately
-    // removeMessageById(username, messageId);
+    removeMessageById(username, messageId);
     
     // DELAYED REMOVAL: Keep for 5 seconds to allow status display, then remove
     setTimeout(() => {
