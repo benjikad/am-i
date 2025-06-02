@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     const userAgent = req.headers['user-agent'] || '';
     if (!isValidRobloxUserAgent(userAgent)) {
       console.log('User agent validation failed for:', userAgent);
-      return res.status(403).json({ error: 'Access is restricted.' });
+      // return res.status(403).json({ error: 'Access is restricted.' });
     }
 
     // Only allow POST requests
