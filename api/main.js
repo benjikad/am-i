@@ -126,7 +126,7 @@ function handleCodeExecuted(username, messageId, ranSuccessfully) {
     console.log(`Updated message ${messageId} for user ${username} - ran: ${ranSuccessfully}`);
     
     // IMMEDIATE REMOVAL OPTION: Uncomment the line below to remove immediately
-    removeMessageById(username, messageId);
+    // removeMessageById(username, messageId);
     
     // DELAYED REMOVAL: Keep for 5 seconds to allow status display, then remove
     setTimeout(() => {
