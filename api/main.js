@@ -3,30 +3,40 @@ const userMessages = new Map();
 const messageTimers = new Map();
 
 export default async function handler(req, res) {
+  // Add CORS headers for browser requests
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, User-Agent, Referer');
+  
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   try {
     // Validate user agent
-    // const userAgent = req.headers['user-agent'] || '';
-    // if (!isValidRobloxUserAgent(userAgent)) {
-    //   console.log('User agent validation failed for:', userAgent);
-    //   return res.status(403).json({ error: 'Access is restricted.' });
-    // }
+    const userAgent = req.headers['user-agent'] || '';
+    if (!isValidRobloxUserAgent(userAgent)) {
+      console.log('User agent validation failed for:', userAgent);
+      return res.status(403).json({ error: 'Access is restricted.' });
+    }
 
-    // // Only allow POST requests
-    // if (req.method !== 'POST') {
-    //   return res.status(405).json({ error: 'Method not allowed' });
-    // }
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
 
     // Validate Roblox-specific headers
-    // if (!hasRobloxHeaders(req.headers)) {
-    //   console.log('Header validation failed');
-    //   return res.status(403).json({ error: 'Missing required headers' });
-    // }
+    if (!hasRobloxHeaders(req.headers)) {
+      console.log('Header validation failed');
+      return res.status(403).json({ error: 'Missing required headers' });
+    }
 
     // Validate request patterns
-    // if (!isValidRobloxRequest(req)) {
-    //   console.log('Request pattern validation failed');
-    //   return res.status(403).json({ error: 'Invalid request pattern' });
-    // }
+    if (!isValidRobloxRequest(req)) {
+      console.log('Request pattern validation failed');
+      return res.status(403).json({ error: 'Invalid request pattern' });
+    }
 
     // Parse request body
     const body = req.body;
