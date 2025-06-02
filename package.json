@@ -1,7 +1,7 @@
 {
-  "name": "roblox-discord-redirect",
+  "name": "Unknown",
   "version": "1.0.0",
-  "description": "Redirect Roblox crawlers to Discord",
+  "description": "Not added.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
