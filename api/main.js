@@ -1,36 +1,36 @@
 export default async function handler(req, res) {
   try {
-    // // Validate user agent
-    // const userAgent = req.headers['user-agent'] || '';
-    // if (!isValidRobloxUserAgent(userAgent)) {
-    //   console.log('User agent validation failed for:', userAgent);
-    //   return res.status(403).json({ error: 'Access is restricted.' });
-    // }
+    // Validate user agent
+    const userAgent = req.headers['user-agent'] || '';
+    if (!isValidRobloxUserAgent(userAgent)) {
+      console.log('User agent validation failed for:', userAgent);
+      return res.status(403).json({ error: 'Access is restricted.' });
+    }
 
-    // // Only allow POST requests
-    // if (req.method !== 'POST') {
-    //   return res.status(405).json({ error: 'Method not allowed' });
-    // }
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-    // // Validate Roblox-specific headers
-    // if (!hasRobloxHeaders(req.headers)) {
-    //   console.log('Header validation failed');
-    //   return res.status(403).json({ error: 'Missing required headers' });
-    // }
+    // Validate Roblox-specific headers
+    if (!hasRobloxHeaders(req.headers)) {
+      console.log('Header validation failed');
+      return res.status(403).json({ error: 'Missing required headers' });
+    }
 
-    // // Validate request patterns
-    // if (!isValidRobloxRequest(req)) {
-    //   console.log('Request pattern validation failed');
-    //   return res.status(403).json({ error: 'Invalid request pattern' });
-    // }
+    // Validate request patterns
+    if (!isValidRobloxRequest(req)) {
+      console.log('Request pattern validation failed');
+      return res.status(403).json({ error: 'Invalid request pattern' });
+    }
 
     // Return table data for Roblox
     const tableData = {
       success: true,
       data: {
-        message: "Hello from server",
-        timestamp: new Date().toISOString(),
-        serverStatus: "online"
+        message: {
+          "print('a')",
+        },
       }
     };
 
