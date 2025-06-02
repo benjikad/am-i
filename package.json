@@ -1,7 +1,7 @@
 {
-  "name": "auth",
+  "name": "roblox-discord-redirect",
   "version": "1.0.0",
-  "description": "No information provided.",
+  "description": "Redirect Roblox crawlers to Discord",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
