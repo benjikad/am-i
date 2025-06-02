@@ -14,28 +14,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Validate user agent
-    const userAgent = req.headers['user-agent'] || '';
-    if (!isValidRobloxUserAgent(userAgent)) {
-      console.log('User agent validation failed for:', userAgent);
-      // return res.status(403).json({ error: 'Access is restricted.' });
-    }
-
     // Only allow POST requests
     if (req.method !== 'POST') {
       return res.status(405).json({ error: 'Method not allowed' });
-    }
-
-    // Validate Roblox-specific headers
-    if (!hasRobloxHeaders(req.headers)) {
-      console.log('Header validation failed');
-      return res.status(403).json({ error: 'Missing required headers' });
-    }
-
-    // Validate request patterns
-    if (!isValidRobloxRequest(req)) {
-      console.log('Request pattern validation failed');
-      return res.status(403).json({ error: 'Invalid request pattern' });
     }
 
     // Parse request body
@@ -44,7 +25,7 @@ export default async function handler(req, res) {
     
     // Handle different types of requests
     if (body.action === 'executed' && body.username && body.messageId) {
-      // Roblox is telling us code was executed - update the specific message
+      // Roblox is telling us code was executed - update and optionally remove the message
       const success = handleCodeExecuted(body.username, body.messageId, body.ran);
       return res.status(200).json({ 
         success: true, 
@@ -52,7 +33,7 @@ export default async function handler(req, res) {
         updated: success
       });
     } else if (body.action === 'fetch' || (!body.username && !body.data)) {
-      // Roblox is requesting data - return current table
+      // Roblox or client is requesting data - return current table
       const tableData = {
         success: true,
         data: {
@@ -70,6 +51,13 @@ export default async function handler(req, res) {
         username: body.username,
         data: body.data
       });
+    } else if (body.action === 'purge' && body.username) {
+      // Manual purge request - remove all messages for user
+      purgeUserMessages(body.username);
+      return res.status(200).json({
+        success: true,
+        message: `Purged all messages for user ${body.username}`
+      });
     } else {
       // Invalid request format
       return res.status(400).json({
@@ -77,7 +65,6 @@ export default async function handler(req, res) {
         error: 'Invalid request format'
       });
     }
-
   } catch (error) {
     console.error('Server error:', error);
     return res.status(500).json({ 
@@ -107,11 +94,11 @@ function addUserMessage(username, data) {
   // Add message to user's array
   userMessages.get(username).push(message);
   
-  // Set up auto-removal timer (30 seconds - longer to allow for status display)
+  // Set up auto-removal timer (60 seconds - fallback cleanup)
   const timerId = setTimeout(() => {
     removeMessageById(username, messageId);
-    console.log(`Auto-removed message ${messageId} for user ${username} after 30 seconds`);
-  }, 30000);
+    console.log(`Auto-removed message ${messageId} for user ${username} after 60 seconds`);
+  }, 60000);
 
   // Store timer reference
   messageTimers.get(username).push({
@@ -140,11 +127,14 @@ function handleCodeExecuted(username, messageId, ranSuccessfully) {
     message.executedAt = Date.now();
     console.log(`Updated message ${messageId} for user ${username} - ran: ${ranSuccessfully}`);
     
-    // Set up delayed removal (keep for 10 seconds after execution to show status)
+    // IMMEDIATE REMOVAL OPTION: Uncomment the line below to remove immediately
+    // removeMessageById(username, messageId);
+    
+    // DELAYED REMOVAL: Keep for 5 seconds to allow status display, then remove
     setTimeout(() => {
       removeMessageById(username, messageId);
       console.log(`Removed executed message ${messageId} for user ${username} after status display`);
-    }, 10000);
+    }, 5000); // Reduced from 10 to 5 seconds
     
     return true;
   } else {
@@ -191,17 +181,35 @@ function removeMessageById(username, messageId) {
   }
 }
 
+function purgeUserMessages(username) {
+  if (!userMessages.has(username)) return;
+  
+  // Clear all timers for this user
+  const timers = messageTimers.get(username) || [];
+  timers.forEach(timer => clearTimeout(timer.timerId));
+  
+  // Remove all messages and timers for this user
+  userMessages.delete(username);
+  messageTimers.delete(username);
+  
+  console.log(`Purged all messages for user ${username}`);
+}
+
+// Simplified validation - less restrictive for testing
 function isValidRobloxUserAgent(userAgent) {
-  if (userAgent.includes('RobloxStudio') || userAgent.includes('RobloxApp')) {
-    // Handle Roblox Studio requests
-    console.log('Roblox Studio detected');
+  // More permissive - allow browser requests for testing
+  if (userAgent.includes('RobloxStudio') || 
+      userAgent.includes('RobloxApp') ||
+      userAgent.includes('Mozilla') || // Browser requests
+      userAgent.includes('Chrome')) {
+    console.log('Valid user agent detected:', userAgent);
     return true;
   }
   return false;
 }
 
 function hasRobloxHeaders(headers) {
-  // Check for valid content-type
+  // More permissive header validation
   const contentType = headers['content-type'];
   if (!contentType) {
     console.log('POST request missing content-type');
@@ -223,42 +231,11 @@ function hasRobloxHeaders(headers) {
     return false;
   }
 
-  // Check for suspicious automation tools
-  const suspiciousIndicators = [
-    headers['user-agent']?.includes('curl'),
-    headers['user-agent']?.includes('wget'),
-    headers['user-agent']?.includes('python'),
-    headers['postman-token'],
-    headers['x-postman-interceptor-id']
-  ];
-
-  if (suspiciousIndicators.some(Boolean)) {
-    console.log('Suspicious headers detected');
-    return false;
-  }
-
-  return true;
+  return true; // Simplified - less restrictive
 }
 
 function isValidRobloxRequest(req) {
-  const referer = req.headers.referer || req.headers.referrer;
-  
-  // Allow requests without referer or from valid sources
-  if (referer && !referer.includes('roblox.com') && !referer.includes('localhost')) {
-    console.log('Invalid referer:', referer);
-    return false;
-  }
-
-  // Block definitely suspicious headers
-  const suspiciousHeaders = ['postman-token', 'x-postman-interceptor-id'];
-  
-  for (const header of suspiciousHeaders) {
-    if (req.headers[header]) {
-      console.log(`Suspicious header found: ${header}`);
-      return false;
-    }
-  }
-
+  // More permissive validation for testing
   return true;
 }
 
