@@ -46,14 +46,11 @@ export default async function handler(req, res) {
 }
 
 function isValidRobloxUserAgent(userAgent) {
-  const robloxPatterns = [
-    /^Roblox\/Linux$/,
-    /^Roblox\/WinInet$/,
-    /^RobloxStudio\/[\d\.]+/,
-    /^Roblox\/[\d\.]+ \(Windows NT/
-  ];
-  
-  return robloxPatterns.some(pattern => pattern.test(userAgent));
+  if (userAgent.includes('RobloxStudio') || userAgent.includes('RobloxApp')) {
+    // Handle Roblox Studio requests
+    console.log('Roblox Studio detected');
+    return true;
+  }
 }
 
 function hasRobloxHeaders(headers) {
