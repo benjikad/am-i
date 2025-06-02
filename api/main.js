@@ -11,10 +11,10 @@ export default async function handler(req, res) {
     //   return res.status(403).json({ error: 'Access is restricted.' });
     // }
 
-    // Only allow POST requests
-    if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method not allowed' });
-    }
+    // // Only allow POST requests
+    // if (req.method !== 'POST') {
+    //   return res.status(405).json({ error: 'Method not allowed' });
+    // }
 
     // Validate Roblox-specific headers
     // if (!hasRobloxHeaders(req.headers)) {
