@@ -28,9 +28,11 @@ export default async function handler(req, res) {
     const tableData = {
       success: true,
       data: {
-        message: [
-          "print('a')",
-        ],
+        message: {
+          benjikad: [
+            'print("A")',
+          ]
+        }
       }
     };
 
