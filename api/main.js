@@ -40,16 +40,18 @@ export default async function handler(req, res) {
 
     // Parse request body
     const body = req.body;
+    console.log('Received request body:', body);
     
     // Handle different types of requests
     if (body.action === 'executed' && body.username && body.messageId) {
-      // Roblox is telling us code was executed - remove the specific message
-      handleCodeExecuted(body.username, body.messageId);
+      // Roblox is telling us code was executed - update the specific message
+      const success = handleCodeExecuted(body.username, body.messageId, body.ran);
       return res.status(200).json({ 
         success: true, 
-        message: 'Code execution acknowledged' 
+        message: success ? 'Code execution acknowledged' : 'Message not found',
+        updated: success
       });
-    } else if (body.action === 'fetch' || !body.username || !body.data) {
+    } else if (body.action === 'fetch' || (!body.username && !body.data)) {
       // Roblox is requesting data - return current table
       const tableData = {
         success: true,
@@ -57,8 +59,9 @@ export default async function handler(req, res) {
           message: Object.fromEntries(userMessages)
         }
       };
+      console.log('Returning table data:', tableData);
       return res.status(200).json(tableData);
-    } else {
+    } else if (body.username && body.data) {
       // New message from web interface - add to user's table
       addUserMessage(body.username, body.data);
       return res.status(200).json({ 
@@ -66,6 +69,12 @@ export default async function handler(req, res) {
         message: 'Data added to user table',
         username: body.username,
         data: body.data
+      });
+    } else {
+      // Invalid request format
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid request format'
       });
     }
 
@@ -98,11 +107,11 @@ function addUserMessage(username, data) {
   // Add message to user's array
   userMessages.get(username).push(message);
   
-  // Set up auto-removal timer (5 seconds)
+  // Set up auto-removal timer (30 seconds - longer to allow for status display)
   const timerId = setTimeout(() => {
     removeMessageById(username, messageId);
-    console.log(`Auto-removed message ${messageId} for user ${username} after 5 seconds`);
-  }, 5000);
+    console.log(`Auto-removed message ${messageId} for user ${username} after 30 seconds`);
+  }, 30000);
 
   // Store timer reference
   messageTimers.get(username).push({
@@ -115,7 +124,12 @@ function addUserMessage(username, data) {
 }
 
 function handleCodeExecuted(username, messageId, ranSuccessfully) {
-  if (!userMessages.has(username)) return;
+  console.log(`Handling execution notification: ${username}, ${messageId}, ${ranSuccessfully}`);
+  
+  if (!userMessages.has(username)) {
+    console.log(`No messages found for user: ${username}`);
+    return false;
+  }
   
   // Find and update the message status
   const messages = userMessages.get(username);
@@ -126,11 +140,16 @@ function handleCodeExecuted(username, messageId, ranSuccessfully) {
     message.executedAt = Date.now();
     console.log(`Updated message ${messageId} for user ${username} - ran: ${ranSuccessfully}`);
     
-    // Set up delayed removal (keep for 3 seconds after execution to show status)
+    // Set up delayed removal (keep for 10 seconds after execution to show status)
     setTimeout(() => {
       removeMessageById(username, messageId);
       console.log(`Removed executed message ${messageId} for user ${username} after status display`);
-    }, 3000);
+    }, 10000);
+    
+    return true;
+  } else {
+    console.log(`Message ${messageId} not found for user ${username}`);
+    return false;
   }
 }
 
@@ -143,6 +162,7 @@ function removeMessageById(username, messageId) {
   
   if (messageIndex !== -1) {
     messages.splice(messageIndex, 1);
+    console.log(`Removed message ${messageId} for user ${username}`);
     
     // If no more messages for this user, clean up the user entry
     if (messages.length === 0) {
@@ -151,6 +171,7 @@ function removeMessageById(username, messageId) {
       const timers = messageTimers.get(username) || [];
       timers.forEach(timer => clearTimeout(timer.timerId));
       messageTimers.delete(username);
+      console.log(`Cleaned up user ${username} - no more messages`);
     }
   }
 
