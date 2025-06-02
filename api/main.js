@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     const userAgent = req.headers['user-agent'] || '';
     if (!isValidRobloxUserAgent(userAgent)) {
       console.log('User agent validation failed for:', userAgent);
-      // return res.status(403).json({ error: 'Access is restricted.' });
+      return res.status(403).json({ error: 'Access is restricted.' });
     }
 
     // Only allow POST requests
@@ -90,7 +90,9 @@ function addUserMessage(username, data) {
   const message = {
     id: messageId,
     content: data,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    ran: null, // null = not executed yet, true = success, false = failed
+    executedAt: null
   };
 
   // Add message to user's array
@@ -112,9 +114,24 @@ function addUserMessage(username, data) {
   console.log(`Current messages for ${username}:`, userMessages.get(username));
 }
 
-function handleCodeExecuted(username, messageId) {
-  removeMessageById(username, messageId);
-  console.log(`Removed executed message ${messageId} for user ${username}`);
+function handleCodeExecuted(username, messageId, ranSuccessfully) {
+  if (!userMessages.has(username)) return;
+  
+  // Find and update the message status
+  const messages = userMessages.get(username);
+  const message = messages.find(msg => msg.id === messageId);
+  
+  if (message) {
+    message.ran = ranSuccessfully;
+    message.executedAt = Date.now();
+    console.log(`Updated message ${messageId} for user ${username} - ran: ${ranSuccessfully}`);
+    
+    // Set up delayed removal (keep for 3 seconds after execution to show status)
+    setTimeout(() => {
+      removeMessageById(username, messageId);
+      console.log(`Removed executed message ${messageId} for user ${username} after status display`);
+    }, 3000);
+  }
 }
 
 function removeMessageById(username, messageId) {
