@@ -109,7 +109,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 50px;
         }
         .btn:hover {
             transform: translateY(-2px);
@@ -136,12 +135,13 @@
             border-top-color: white;
             animation: spin 1s ease-in-out infinite;
             margin-right: 10px;
+            flex-shrink: 0;
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
         .btn.loading .loading {
-            display: inline-block;
+            display: block;
         }
         .forgot-password {
             text-align: center;
