@@ -7,6 +7,6 @@
     {
       "source": "/api/login",
       "destination": "/api/login?path=$1"
-    },
+    }
   ]
 }
