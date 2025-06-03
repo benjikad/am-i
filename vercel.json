@@ -25,40 +25,34 @@
       "destination": "/html/login.html"
     },
     {
-      "source": "/html",
-      "destination": "/login"
+      "source": "/404",
+      "destination": "/html/404.html"
     }
   ],
   "redirects": [
     {
       "source": "/api/main.js",
-      "destination": "/html/404.html",
-      "permanent": true
+      "destination": "/404",
     },
     {
       "source": "/api/login.js", 
-      "destination": "/html/404.html",
-      "permanent": true
+      "destination": "/404",
     },
     {
       "source": "/api/verify.js",
-      "destination": "/html/404.html", 
-      "permanent": true
+      "destination": "/404", 
     },
     {
       "source": "/api/dashboard.js",
-      "destination": "/html/404.html",
-      "permanent": true
+      "destination": "/404",
     },
     {
       "source": "/html/:path*",
-      "destination": "/html/404.html", 
-      "permanent": true
+      "destination": "/404", 
     },
     {
       "source": "/:path*\\.(js|css|json|md|txt|env|config|html)$",
-      "destination": "/html/404.html",
-      "permanent": true
+      "destination": "/404",
     }
   ],
   "headers": [
