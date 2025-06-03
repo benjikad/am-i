@@ -19,6 +19,10 @@
     {
       "source": "/dashboard",
       "destination": "/api/dashboard.js"
+    },
+    {
+      "source": "",
+      "destination": "/html/login.html"
     }
   ]
 }
