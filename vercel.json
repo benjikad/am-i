@@ -3,6 +3,10 @@
     {
       "source": "/api",
       "destination": "/api/main?path=$1"
-    }
+    },
+    {
+      "source": "/api/login",
+      "destination": "/api/login?path=$1"
+    },
   ]
 }
