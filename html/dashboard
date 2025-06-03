@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox Data Sender</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        .form-control {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .form-control::placeholder {
+            color: #999;
+        }
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Courier New', monospace;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .status-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+        .status {
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+        .status.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .status.success {
+            background: rgba(34, 197, 94, 0.95);
+            color: white;
+            border-left: 4px solid #22c55e;
+        }
+        .status.error {
+            background: rgba(239, 68, 68, 0.95);
+            color: white;
+            border-left: 4px solid #ef4444;
+        }
+        .status.info {
+            background: rgba(59, 130, 246, 0.95);
+            color: white;
+            border-left: 4px solid #3b82f6;
+        }
+        .execution-status {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            display: none;
+        }
+        .execution-status h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.3em;
+        }
+        .message-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .message-user {
+            font-weight: 600;
+            color: #667eea;
+        }
+        .message-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .message-content {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .message-time {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .status-container {
+                position: static;
+                max-width: none;
+                margin-top: 20px;
+            }
+            .status {
+                transform: none;
+                opacity: 1;
+            }
+            .status.show {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Roblox Data Sender</h1>
+            <p>Send data to your Roblox server endpoint</p>
+        </div>
+        <form id="dataForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" class="form-control" 
+                       placeholder="Enter your username" required>
+            </div>
+            <div class="form-group">
+                <label for="dataString">Data String</label>
+                <textarea id="dataString" class="form-control" 
+                          placeholder="Enter the string to send with username" required></textarea>
+            </div>
+            <button type="submit" class="btn" id="sendBtn">
+                Send Data
+            </button>
+        </form>
+        <div id="executionStatus" class="execution-status"></div>
+    </div>
+
+    <div id="statusContainer" class="status-container"></div>
+
+    <script>
+        const form = document.getElementById('dataForm');
+        const statusContainer = document.getElementById('statusContainer');
+        const executionStatusDiv = document.getElementById('executionStatus');
+        const sendBtn = document.getElementById('sendBtn');
+        const defaultServerUrl = 'https://am-i-three.vercel.app/';
+        
+        let statusIdCounter = 0;
+        
+        function showStatus(message, type, duration = 6000) {
+            const statusId = 'status-' + (++statusIdCounter);
+            const statusDiv = document.createElement('div');
+            statusDiv.id = statusId;
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+            
+            statusContainer.appendChild(statusDiv);
+            
+            // Trigger animation
+            setTimeout(() => {
+                statusDiv.classList.add('show');
+            }, 10);
+            
+            // Auto remove after duration
+            setTimeout(() => {
+                statusDiv.classList.remove('show');
+                setTimeout(() => {
+                    if (statusDiv.parentNode) {
+                        statusDiv.parentNode.removeChild(statusDiv);
+                    }
+                }, 300); // Wait for animation to complete
+            }, duration);
+        }
+        
+        function formatTime(timestamp) {
+            return new Date(timestamp).toLocaleTimeString();
+        }
+        
+        function getStatusBadge(ran) {
+            if (ran === null) return '<span class="message-status status-pending">⏳ Pending</span>';
+            if (ran === true) return '<span class="message-status status-success">✅ Success</span>';
+            if (ran === false) return '<span class="message-status status-failed">❌ Failed</span>';
+            return '<span class="message-status status-pending">⏳ Unknown</span>';
+        }
+        
+        async function fetchExecutionStatus() {
+            try {
+                const response = await fetch(defaultServerUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'RobloxStudio/1.0',
+                        'Referer': 'https://www.roblox.com'
+                    },
+                    body: JSON.stringify({ action: 'fetch' }),
+                    mode: 'cors'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Fetch response:', data);
+                
+                if (data.success && data.data && data.data.message) {
+                    return data.data.message;
+                } else {
+                    return {};
+                }
+            } catch (error) {
+                console.error('Failed to fetch status:', error);
+                return null;
+            }
+        }
+        
+        function displayExecutionStatus(messages) {
+            let html = '<h3>📋 Execution Status</h3>';
+            
+            if (!messages || Object.keys(messages).length === 0) {
+                html += '<p>No pending messages.</p>';
+            } else {
+                for (const [username, userMessages] of Object.entries(messages)) {
+                    html += `<div class="message-item">
+                        <div class="message-header">
+                            <span class="message-user">👤 ${username}</span>
+                            <span>${userMessages.length} message(s)</span>
+                        </div>`;
+                    
+                    userMessages.forEach(msg => {
+                        html += `
+                            <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <small style="color: #666;">ID: ${msg.id}</small>
+                                    ${getStatusBadge(msg.ran)}
+                                </div>
+                                <div class="message-content">${msg.content}</div>
+                                <div class="message-time">
+                                    Sent: ${formatTime(msg.timestamp)}
+                                    ${msg.executedAt ? `• Executed: ${formatTime(msg.executedAt)}` : ''}
+                                </div>
+                            </div>`;
+                    });
+                    
+                    html += '</div>';
+                }
+            }
+            
+            executionStatusDiv.innerHTML = html;
+            executionStatusDiv.style.display = 'block';
+        }
+        
+        // Monitor execution status - stops after success or failure
+        async function monitorExecution() {
+            const startTime = Date.now();
+            const timeout = 30000; // 30 seconds max timeout
+            let hasShownMessages = false;
+            
+            while (Date.now() - startTime < timeout) {
+                const messages = await fetchExecutionStatus();
+                
+                if (messages === null) {
+                    // Error occurred, stop monitoring
+                    showStatus('❌ Failed to check execution status', 'error');
+                    return;
+                }
+                
+                // Display current status
+                displayExecutionStatus(messages);
+                
+                // Count total messages and check execution status
+                let totalMessages = 0;
+                let pendingMessages = 0;
+                let successMessages = 0;
+                let failedMessages = 0;
+                
+                for (const userMessages of Object.values(messages)) {
+                    totalMessages += userMessages.length;
+                    for (const msg of userMessages) {
+                        if (msg.ran === null) {
+                            pendingMessages++;
+                        } else if (msg.ran === true) {
+                            successMessages++;
+                        } else if (msg.ran === false) {
+                            failedMessages++;
+                        }
+                    }
+                }
+                
+                console.log(`Total: ${totalMessages}, Pending: ${pendingMessages}, Success: ${successMessages}, Failed: ${failedMessages}`);
+                
+                if (totalMessages > 0) {
+                    hasShownMessages = true;
+                    
+                    // Stop monitoring if any message has been executed (success or failure)
+                    if (successMessages > 0 || failedMessages > 0) {
+                        if (successMessages > 0 && failedMessages === 0) {
+                            showStatus('✅ Execution completed successfully!', 'success');
+                        } else if (failedMessages > 0 && successMessages === 0) {
+                            showStatus('❌ Execution failed', 'error');
+                        } else {
+                            showStatus(`⚠️ Mixed results: ${successMessages} succeeded, ${failedMessages} failed`, 'error');
+                        }
+                        return; // Stop monitoring after getting results
+                    }
+                } else if (hasShownMessages) {
+                    // Messages were there but now gone (completed and removed)
+                    showStatus('✅ Messages completed and cleaned up!', 'success');
+                    return;
+                }
+                
+                // Wait before next check
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            // Timeout reached - check final status
+            const finalMessages = await fetchExecutionStatus();
+            let finalPending = 0;
+            let finalSuccess = 0;
+            let finalFailed = 0;
+            
+            if (finalMessages) {
+                for (const userMessages of Object.values(finalMessages)) {
+                    for (const msg of userMessages) {
+                        if (msg.ran === null) {
+                            finalPending++;
+                        } else if (msg.ran === true) {
+                            finalSuccess++;
+                        } else if (msg.ran === false) {
+                            finalFailed++;
+                        }
+                    }
+                }
+            }
+            
+            if (finalSuccess > 0 || finalFailed > 0) {
+                if (finalSuccess > 0 && finalFailed === 0) {
+                    showStatus('✅ Execution completed successfully! (timeout reached)', 'success');
+                } else if (finalFailed > 0 && finalSuccess === 0) {
+                    showStatus('❌ Execution failed (timeout reached)', 'error');
+                } else {
+                    showStatus(`⚠️ Mixed results: ${finalSuccess} succeeded, ${finalFailed} failed (timeout reached)`, 'error');
+                }
+            } else if (finalPending > 0) {
+                showStatus('⏰ Timeout: Messages still pending. Check if your Roblox script is running.', 'error');
+            } else {
+                showStatus('⏰ Monitoring timeout reached - no execution detected', 'error');
+            }
+        }
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const dataString = document.getElementById('dataString').value.trim();
+            
+            if (!username || !dataString) {
+                showStatus('Please fill in all fields', 'error');
+                return;
+            }
+            
+            // Show loading state
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="loading"></span>Sending...';
+            
+            try {
+                const requestData = {
+                    username: username,
+                    data: dataString,
+                    timestamp: new Date().toISOString()
+                };
+                
+                console.log('Sending request to:', defaultServerUrl);
+                console.log('Request data:', requestData);
+                
+                const response = await fetch(defaultServerUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'RobloxStudio/1.0',
+                        'Referer': 'https://www.roblox.com'
+                    },
+                    body: JSON.stringify(requestData),
+                    mode: 'cors'
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error text:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const responseData = await response.json();
+                console.log('Response data:', responseData);
+                
+                if (responseData.success) {
+                    showStatus('✅ Data sent successfully! Monitoring execution...', 'success');
+                    
+                    // Start monitoring execution after a short delay
+                    setTimeout(() => {
+                        monitorExecution();
+                    }, 1000);
+                } else {
+                    showStatus(`❌ Server error: ${responseData.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Request failed:', error);
+                
+                let errorMessage = `❌ Request failed: ${error.message}`;
+                
+                // Provide specific guidance for common errors
+                if (error.message.includes('Failed to fetch')) {
+                    errorMessage += '\n\n🔧 Possible solutions:\n' +
+                        '• Check if the server is running and accessible\n' +
+                        '• Make sure the server allows CORS for browser requests\n' +
+                        '• Try using a tool like Postman to test the endpoint directly';
+                } else if (error.message.includes('CORS')) {
+                    errorMessage += '\n\n🔧 CORS Issue:\n' +
+                        'The server needs to include CORS headers like:\n' +
+                        'Access-Control-Allow-Origin: *\n' +
+                        'Access-Control-Allow-Headers: Content-Type, User-Agent';
+                }
+                
+                showStatus(errorMessage, 'error');
+            } finally {
+                // Reset button state
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = 'Send Data';
+            }
+        });
+    </script>
+</body>
+</html>
