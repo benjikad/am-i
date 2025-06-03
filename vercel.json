@@ -27,6 +27,10 @@
     {
       "source": "/404",
       "destination": "/html/404.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/html/404.html"
     }
   ],
   "redirects": [
@@ -63,11 +67,6 @@
     {
       "source": "/:path*\\.(js|css|json|md|txt|env|config|html)$",
       "destination": "/403",
-      "permanent": false
-    },
-    {
-      "source": "/:path*",
-      "destination": "/404",
       "permanent": false
     }
   ],
