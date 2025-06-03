@@ -7,6 +7,10 @@
     {
       "source": "/api/login",
       "destination": "/api/login?path=$1"
+    },
+    {
+      "source": "/login",
+      "destination": "/htmp/login?path=$1"
     }
   ]
 }
