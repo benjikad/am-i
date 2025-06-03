@@ -10,7 +10,7 @@
     },
     {
       "source": "/login",
-      "destination": "/htmp/login?path=$1"
+      "destination": "/html/login?path=$1"
     }
   ]
 }
