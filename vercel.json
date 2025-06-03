@@ -31,7 +31,22 @@
   ],
   "redirects": [
     {
-      "source": "/api/:path*",
+      "source": "/api/main.js",
+      "destination": "/404",
+      "permanent": false
+    },
+    {
+      "source": "/api/login.js", 
+      "destination": "/404",
+      "permanent": false
+    },
+    {
+      "source": "/api/verify.js",
+      "destination": "/404", 
+      "permanent": false
+    },
+    {
+      "source": "/api/dashboard.js",
       "destination": "/404",
       "permanent": false
     },
