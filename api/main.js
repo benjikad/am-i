@@ -15,6 +15,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
+  const userAgent = req.headers['user-agent'];
   
   // INLINE authentication check (instead of fetch call)
   let isAuthenticated = false;
@@ -35,7 +36,7 @@ export default async function handler(req, res) {
     console.error('Auth verification failed:', error);
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isValidRobloxUserAgent(userAgent)) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   
