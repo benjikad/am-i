@@ -23,7 +23,11 @@
     {
       "source": "/403",
       "destination": "/html/403.html"
-    }
+    },
+    {
+      "source": "/404",
+      "destination": "/html/404.html"
+    },
   ],
   "redirects": [
     {
