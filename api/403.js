@@ -5,5 +5,5 @@
 
 // api/404.js
 export default function handler(req, res) {
-  res.redirect(302, '/html/404.html');
+  res.redirect(302, '/html/403.html');
 }
