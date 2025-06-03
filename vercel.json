@@ -15,6 +15,10 @@
     {
       "source": "/login",
       "destination": "/html/login.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/html/dashboard.html"
     }
   ]
 }
