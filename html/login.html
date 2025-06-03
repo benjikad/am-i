@@ -43,7 +43,6 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-
         .header p {
             color: #666;
             font-size: 1.1em;
@@ -119,10 +118,9 @@
             transform: translateY(0);
         }
         .btn:disabled {
-            opacity: 0.8;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
         }
         .loading {
             display: none;
@@ -306,7 +304,7 @@
                 setTimeout(() => {
                     statusContainer.removeChild(statusElement);
                 }, 300);
-            }
+            }, 3000);
         }
         function setLoading(loading) {
             isLoading = loading;
