@@ -21,7 +21,7 @@
       "destination": "/api/dashboard.js"
     },
     {
-      "source": "",
+      "source": "/",
       "destination": "/html/login.html"
     }
   ]
