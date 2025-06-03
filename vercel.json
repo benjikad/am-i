@@ -18,7 +18,7 @@
     },
     {
       "source": "/dashboard",
-      "destination": "/html/dashboard.html"
+      "destination": "/api/dashboard.js"
     }
   ]
 }
