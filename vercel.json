@@ -22,7 +22,11 @@
     },
     {
       "source": "/",
-      "destination": "/html/login.html"
+      "destination": "/login"
+    },
+    {
+      "source": "/html",
+      "destination": "/login"
     }
   ]
 }
