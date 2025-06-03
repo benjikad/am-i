@@ -4,10 +4,8 @@ import jwt from 'jsonwebtoken';
 // In production, use environment variables for these
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
 const ADMIN_USERS = {
-  'admin': 'admin123',
-  'user1': 'password123',
-  'manager': 'secure456'
-  // Add more users as needed
+  'benjikad': '6a25e3e9-a6de-45b1-8ad0-772e169303ed',
+  'gabe': 'gabeisgud',
 };
 
 export default async function handler(req, res) {
