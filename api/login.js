@@ -42,26 +42,36 @@ export default async function handler(req, res) {
     }
 
     // Create JWT token
-    const tokenExpiry = rememberMe ? '30d' : '24h';
+    const tokenExpiry = rememberMe ? '6h' : '30m';
     const token = jwt.sign(
       { username, loginTime: Date.now() },
       JWT_SECRET,
       { expiresIn: tokenExpiry }
     );
 
-    // Set cookie options
+    // Set cookie options with matching expiration times
+    const maxAgeMs = rememberMe ? 6 * 60 * 60 * 1000 : 30 * 60 * 1000; // 6 hours or 30 minutes in ms
+    
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // HTTPS only in production
       sameSite: 'strict',
-      maxAge: rememberMe ?  6 * 60 * 60 * 1000 : 30 * 60 * 1000, // 6 hours or 30 minutes in ms
+      maxAge: maxAgeMs,
       path: '/'
     };
 
+    // Properly construct cookie string
+    const cookieString = [
+      `auth-token=${token}`,
+      `Max-Age=${Math.floor(maxAgeMs / 1000)}`, // Max-Age expects seconds, not milliseconds
+      `Path=${cookieOptions.path}`,
+      cookieOptions.httpOnly ? 'HttpOnly' : '',
+      cookieOptions.secure ? 'Secure' : '',
+      `SameSite=${cookieOptions.sameSite}`
+    ].filter(Boolean).join('; ');
+
     // Set the cookie
-    res.setHeader('Set-Cookie', `auth-token=${token}; ${Object.entries(cookieOptions)
-      .map(([key, value]) => `${key}=${value}`)
-      .join('; ')}`);
+    res.setHeader('Set-Cookie', cookieString);
 
     return res.status(200).json({
       message: 'Login successful',
