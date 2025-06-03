@@ -33,32 +33,32 @@
     {
       "source": "/api/main.js",
       "destination": "/html/404.html",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/api/login.js", 
       "destination": "/html/404.html",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/api/verify.js",
       "destination": "/html/404.html", 
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/api/dashboard.js",
       "destination": "/html/404.html",
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/html/:path*",
       "destination": "/html/404.html", 
-      "permanent": false
+      "permanent": true
     },
     {
       "source": "/:path*\\.(js|css|json|md|txt|env|config|html)$",
       "destination": "/html/404.html",
-      "permanent": false
+      "permanent": true
     }
   ],
   "headers": [
