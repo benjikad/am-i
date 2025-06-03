@@ -21,8 +21,8 @@
       "destination": "/api/dashboard.js"
     },
     {
-      "source": "/404",
-      "destination": "/html/404.html"
+      "source": "/403",
+      "destination": "/html/403.html"
     }
   ],
   "redirects": [
@@ -33,32 +33,32 @@
     },
     {
       "source": "/api/main.js",
-      "destination": "/404",
+      "destination": "/403",
       "permanent": false
     },
     {
       "source": "/api/login.js", 
-      "destination": "/404",
+      "destination": "/403",
       "permanent": false
     },
     {
       "source": "/api/verify.js",
-      "destination": "/404",
+      "destination": "/403",
       "permanent": false
     },
     {
       "source": "/api/dashboard.js",
-      "destination": "/404",
+      "destination": "/403",
       "permanent": false
     },
     {
       "source": "/html/:path*",
-      "destination": "/404",
+      "destination": "/403",
       "permanent": false
     },
     {
       "source": "/:path*\\.(js|css|json|md|txt|env|config|html)$",
-      "destination": "/404",
+      "destination": "/403",
       "permanent": false
     }
   ],
