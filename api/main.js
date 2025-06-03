@@ -229,6 +229,7 @@ function purgeUserMessages(username) {
 function isValidRobloxUserAgent(userAgent) {
   // More permissive - allow browser requests for testing
   if (userAgent.includes('RobloxStudio') || 
+      userAgent.includes('Roblox/Linux') ||
       userAgent.includes('RobloxApp') ||
       userAgent.includes('Mozilla') || // Browser requests
       userAgent.includes('Chrome')) {
