@@ -1,37 +1,40 @@
-// In-memory storage for user messages
 const userMessages = new Map();
 const messageTimers = new Map();
-const isAuthenticated = false;
-
-try {
-  const response = await fetch(`https://am-i-three.vercel.app/verify`, {
-      method: 'GET',
-      credentials: 'include', // Include cookies
-      headers: {
-          'Content-Type': 'application/json'
-      }
-  });
-
-  const data = await response.json();
-
-  if (response.ok && data.authenticated) {
-      isAuthenticated = true;
-  } else {
-      isAuthenticated = false;
-  }
-} catch (error) {
-  console.error('Auth check failed:', error);
-  isAuthenticated = false;
-}
 
 export default async function handler(req, res) {
   // Add CORS headers for browser requests
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, User-Agent, Referer');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  // Check authentication for each request
+  let isAuthenticated = false;
+  try {
+    const response = await fetch(`https://am-i-three.vercel.app/verify`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        // Forward cookies from the original request
+        'Cookie': req.headers.cookie || ''
+      }
+    });
+    const data = await response.json();
+    if (response.ok && data.authenticated) {
+      isAuthenticated = true;
+    }
+  } catch (error) {
+    console.error('Auth check failed:', error);
+    isAuthenticated = false;
+  }
 
-  if (isAuthenticated===false) {
-    return res.status(403).end();
+  if (!isAuthenticated) {
+    return res.status(403).json({ error: 'Unauthorized' });
   }
   
   // Handle preflight OPTIONS request
