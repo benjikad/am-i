@@ -31,11 +31,11 @@ export default async function handler(req, res) {
     const decoded = jwt.verify(token, JWT_SECRET);
     
     // If authenticated, serve the HTML file
-    const htmlPath = path.join(process.cwd(), 'public', 'dashboard.html');
+    const htmlPath = path.join(process.cwd(), 'public', '"/html/dashboard.html"');
     let htmlContent = fs.readFileSync(htmlPath, 'utf8');
     
     // Optional: inject user data into HTML
-    htmlContent = htmlContent.replace('{{USERNAME}}', decoded.username);
+    // htmlContent = htmlContent.replace('{{USERNAME}}', decoded.username);
     
     res.setHeader('Content-Type', 'text/html');
     return res.status(200).send(htmlContent);
