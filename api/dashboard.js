@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     const decoded = jwt.verify(token, JWT_SECRET);
     
     // If authenticated, serve the HTML file
-    const htmlPath = path.join(process.cwd(), 'public', '"/html/dashboard.html"');
+    const htmlPath = "/html/dashboard.html";
     let htmlContent = fs.readFileSync(htmlPath, 'utf8');
     
     // Optional: inject user data into HTML
