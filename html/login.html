@@ -43,6 +43,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+
         .header p {
             color: #666;
             font-size: 1.1em;
@@ -106,6 +107,9 @@
             transition: all 0.3s ease;
             margin-top: 10px;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .btn:hover {
             transform: translateY(-2px);
@@ -115,9 +119,10 @@
             transform: translateY(0);
         }
         .btn:disabled {
-            opacity: 0.6;
+            opacity: 0.8;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
         .loading {
             display: none;
@@ -237,7 +242,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔐 Welcome Back</h1>
+            <h1>🔒 Welcome Back</h1>
             <p>Sign in to continue</p>
         </div>
         <form id="loginForm">
@@ -270,10 +275,8 @@
         </div>
     </div>
     <div id="statusContainer" class="status-container"></div>
-
     <script>
         let isLoading = false;
-
         function togglePassword() {
             const passwordField = document.getElementById('password');
             const toggleBtn = document.querySelector('.password-toggle');
@@ -286,7 +289,6 @@
                 toggleBtn.textContent = '👁️';
             }
         }
-
         function showStatus(message, type = 'info') {
             const statusContainer = document.getElementById('statusContainer');
             const statusElement = document.createElement('div');
@@ -304,9 +306,8 @@
                 setTimeout(() => {
                     statusContainer.removeChild(statusElement);
                 }, 300);
-            }, 3000);
+            }
         }
-
         function setLoading(loading) {
             isLoading = loading;
             const loginBtn = document.getElementById('loginBtn');
@@ -322,11 +323,9 @@
                 btnText.textContent = 'Sign In';
             }
         }
-
         function showSignup() {
             showStatus('Access restricted to authorized users only', 'info');
         }
-
         // Check if user is already logged in on page load
         async function checkAuthStatus() {
             try {
@@ -351,10 +350,8 @@
                 // Silently fail - user can still log in normally
             }
         }
-
         // Check auth status when page loads
         document.addEventListener('DOMContentLoaded', checkAuthStatus);
-
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -404,7 +401,6 @@
                 setLoading(false);
             }
         });
-
         // Add some interactive feedback
         document.querySelectorAll('.form-control').forEach(input => {
             input.addEventListener('focus', function() {
