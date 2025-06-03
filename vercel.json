@@ -9,6 +9,10 @@
       "destination": "/api/login.js"
     },
     {
+      "source": "/api/verify",
+      "destination": "/api/verify.js"
+    },
+    {
       "source": "/login",
       "destination": "/html/login.html"
     }
