@@ -32,32 +32,32 @@
   "redirects": [
     {
       "source": "/api/main.js",
-      "destination": "/api/404.js",
+      "destination": "/html/404.html",
       "permanent": false
     },
     {
       "source": "/api/login.js", 
-      "destination": "/api/404.js",
+      "destination": "/html/404.html",
       "permanent": false
     },
     {
       "source": "/api/verify.js",
-      "destination": "/api/404.js", 
+      "destination": "/html/404.html", 
       "permanent": false
     },
     {
       "source": "/api/dashboard.js",
-      "destination": "/api/404.js",
+      "destination": "/html/404.html",
       "permanent": false
     },
     {
       "source": "/html/:path*",
-      "destination": "/api/404.js", 
+      "destination": "/html/404.html", 
       "permanent": false
     },
     {
       "source": "/:path*\\.(js|css|json|md|txt|env|config|html)$",
-      "destination": "/api/404.js",
+      "destination": "/html/404.html",
       "permanent": false
     }
   ],
