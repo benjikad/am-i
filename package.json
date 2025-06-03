@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node index.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "jsonwebtoken": "^9.0.0"
+  },
   "engines": {
     "node": "18.x"
   }
