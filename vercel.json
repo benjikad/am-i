@@ -27,7 +27,7 @@
     {
       "source": "/404",
       "destination": "/html/404.html"
-    },
+    }
   ],
   "redirects": [
     {
