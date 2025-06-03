@@ -64,6 +64,11 @@
       "source": "/:path*\\.(js|css|json|md|txt|env|config|html)$",
       "destination": "/403",
       "permanent": false
+    },
+    {
+      "source": "/:path*",
+      "destination": "/404",
+      "permanent": false
     }
   ],
   "headers": [
