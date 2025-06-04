@@ -40,7 +40,12 @@
       "permanent": false
     },
     {
-      "source": "/:path*\\.(js|html|json|txt|md|env|config)$",
+      "source": "/html/:file(html|js|json|txt|md|env|config)",
+      "destination": "/403",
+      "permanent": false
+    },
+    {
+      "source": "/html/login.html",
       "destination": "/403",
       "permanent": false
     }
