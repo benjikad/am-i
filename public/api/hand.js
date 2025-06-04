@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 export default async function handler(req, res) {
+  console.log('h');
   try {
     console.log('aaaaaaaaaaaaaaaaaa');
     // Extract requested path without query string
