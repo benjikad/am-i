@@ -3,6 +3,7 @@ import path from 'path';
 
 export default async function handler(req, res) {
   try {
+    console.log('aaaaaaaaaaaaaaaaaa');
     // Extract requested path without query string
     const urlPath = req.url.split('?')[0]; 
 
@@ -42,14 +43,14 @@ export default async function handler(req, res) {
     };
     const contentType = contentTypes[ext] || 'application/octet-stream';
     res.setHeader('Content-Type', contentType);
-    console.log('hi')
-    console.log(filePath)
+    console.log('hi');
+    console.log(filePath);
     // Send the file content
     res.status(200).send(fileData);
 
   } catch (err) {
     // Fallback 403 or 404 page
-    console.log(err)
+    console.log(err);
     res.status(404).send('File not found');
   }
 }
