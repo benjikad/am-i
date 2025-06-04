@@ -1,8 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/:path*",
-      "destination": "/api/hand.js"
+      "source": "/login",
+      "destination": "/api/hand?path=/login"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/api/hand?path=/dashboard"
     }
   ],
   "headers": [
