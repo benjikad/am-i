@@ -3,17 +3,32 @@ import path from 'path';
 
 export default async function handler(req, res) {
   try {
-    // Normalize the requested path
-    const urlPath = req.url === '/' ? '/index.html' : req.url;
-    const safePath = path.normalize(urlPath).replace(/^(\.\.(\/|\\|$))+/, '');
+    // Extract requested path without query string
+    const urlPath = req.url.split('?')[0]; 
 
-    // Build the private file path
+    // Map URLs to private files
+    const routesMap = {
+      '/login': '/html/login.html',
+      '/dashboard': '/html/dashboard.html',
+      '/api/login': '/api/login.js',
+      '/api/verify': '/api/verify.js',
+      '/': '/html/index.html',  // root to index
+      // Add more mappings here as needed
+    };
+
+    // Find the mapped path, or fallback to urlPath as is
+    let mappedPath = routesMap[urlPath] || urlPath;
+
+    // Normalize and prevent path traversal
+    const safePath = path.normalize(mappedPath).replace(/^(\.\.(\/|\\|$))+/, '');
+
+    // Construct full path inside private folder
     const filePath = path.join(process.cwd(), 'private', safePath);
 
-    // Read the file
+    // Read the file content
     const fileData = await fs.readFile(filePath);
 
-    // Infer content-type (basic example)
+    // Infer content type based on extension
     const ext = path.extname(filePath).toLowerCase();
     const contentTypes = {
       '.html': 'text/html',
@@ -22,15 +37,17 @@ export default async function handler(req, res) {
       '.css': 'text/css',
       '.png': 'image/png',
       '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg'
+      '.jpeg': 'image/jpeg',
+      '.svg': 'image/svg+xml'
     };
     const contentType = contentTypes[ext] || 'application/octet-stream';
     res.setHeader('Content-Type', contentType);
 
-    // Send content
+    // Send the file content
     res.status(200).send(fileData);
+
   } catch (err) {
-    // Return 403 page or message if file not found
-    res.status(404).sendFile(path.join(process.cwd(), 'public', '403.html'));
+    // Fallback 403 or 404 page
+    res.status(404).send('File not found');
   }
 }
