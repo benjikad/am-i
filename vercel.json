@@ -13,12 +13,12 @@
       "destination": "/api/verify.js"
     },
     {
-      "source": "/login",
-      "destination": "/html/login.html"
-    },
-    {
       "source": "/dashboard",
       "destination": "/api/dashboard.js"
+    },
+    {
+      "source": "/login",
+      "destination": "/html/login.html"
     },
     {
       "source": "/403",
@@ -40,32 +40,7 @@
       "permanent": false
     },
     {
-      "source": "/api/main.js",
-      "destination": "/403",
-      "permanent": false
-    },
-    {
-      "source": "/api/login.js", 
-      "destination": "/403",
-      "permanent": false
-    },
-    {
-      "source": "/api/verify.js",
-      "destination": "/403",
-      "permanent": false
-    },
-    {
-      "source": "/api/dashboard.js",
-      "destination": "/403",
-      "permanent": false
-    },
-    {
-      "source": "/html/:path*",
-      "destination": "/403",
-      "permanent": false
-    },
-    {
-      "source": "/:path*\\.(js|css|json|md|txt|env|config|html)$",
+      "source": "/:path*\\.(js|html|json|txt|md|env|config)$",
       "destination": "/403",
       "permanent": false
     }
