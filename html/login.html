@@ -109,8 +109,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 54px; /* Fixed height to prevent shrinking */
-            gap: 8px; /* Space between spinner and text */
+            min-height: 54px;
+            gap: 8px;
         }
         .btn:hover:not(:disabled) {
             transform: translateY(-2px);
@@ -132,10 +132,10 @@
             border-radius: 50%;
             border-top-color: white;
             animation: spin 1s ease-in-out infinite;
-            display: none; /* Hidden by default */
+            display: none;
         }
         .btn.loading .loading-spinner {
-            display: block; /* Show when loading */
+            display: block;
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -319,7 +319,6 @@
             const loginBtn = document.getElementById('loginBtn');
             const btnText = loginBtn.querySelector('.btn-text');
             
-            // Clear any existing timeout
             if (loadingTimeout) {
                 clearTimeout(loadingTimeout);
                 loadingTimeout = null;
@@ -330,11 +329,10 @@
                 loginBtn.disabled = true;
                 btnText.textContent = 'Signing In...';
                 
-                // Add a safety timeout to prevent infinite loading
                 loadingTimeout = setTimeout(() => {
                     setLoading(false);
                     showStatus('Request timeout. Please try again.', 'error');
-                }, 30000); // 30 seconds timeout
+                }, 30000);
                 
             } else {
                 loginBtn.classList.remove('loading');
@@ -352,10 +350,11 @@
             try {
                 showStatus('Checking information...', 'info');
                 
-                const response = await fetch('https://am-i-three.vercel.app/api/verify', {
+                // FIXED: Use relative URL that matches your vercel.json rewrite
+                const response = await fetch('/api/verify', {
                     method: 'GET',
                     credentials: 'include',
-                    signal: AbortSignal.timeout(10000) // 10 second timeout
+                    signal: AbortSignal.timeout(10000)
                 });
                 
                 if (response.ok) {
@@ -369,11 +368,9 @@
                 }
             } catch (error) {
                 console.error('Auth check error:', error);
-                // Silently fail - user can still log in normally
             }
         }
         
-        // Check auth status when page loads
         document.addEventListener('DOMContentLoaded', checkAuthStatus);
         
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -394,9 +391,10 @@
             
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
                 
-                const response = await fetch('https://am-i-three.vercel.app/api/login', {
+                // FIXED: Use relative URL that matches your vercel.json rewrite
+                const response = await fetch('/api/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -434,7 +432,6 @@
             }
         });
         
-        // Add some interactive feedback
         document.querySelectorAll('.form-control').forEach(input => {
             input.addEventListener('focus', function() {
                 this.parentElement.classList.add('focused');
