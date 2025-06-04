@@ -434,10 +434,37 @@ function formatTime(timestamp) {
 }
 
 function getStatusBadge(ran) {
-    console.log('Status badge for ran:', ran);
-    if (ran === null || ran === undefined) return '<span class="message-status status-pending">⏳ Pending</span>';
-    if (ran === true) return '<span class="message-status status-success">✅ Success</span>';
-    if (ran === false) return '<span class="message-status status-failed">❌ Failed</span>';
+    console.log('Status badge for ran:', ran, 'type:', typeof ran);
+    
+    // Handle string values that might come from API
+    if (typeof ran === 'string') {
+        if (ran.toLowerCase() === 'true' || ran === '1') {
+            return '<span class="message-status status-success">✅ Success</span>';
+        } else if (ran.toLowerCase() === 'false' || ran === '0') {
+            return '<span class="message-status status-failed">❌ Failed</span>';
+        } else if (ran.toLowerCase() === 'null' || ran === '') {
+            return '<span class="message-status status-pending">⏳ Pending</span>';
+        }
+    }
+    
+    // Handle boolean and null values
+    if (ran === null || ran === undefined || ran === 'null') {
+        return '<span class="message-status status-pending">⏳ Pending</span>';
+    }
+    if (ran === true || ran === 'true') {
+        return '<span class="message-status status-success">✅ Success</span>';
+    }
+    if (ran === false || ran === 'false') {
+        return '<span class="message-status status-failed">❌ Failed</span>';
+    }
+    
+    // Handle error objects or error messages
+    if (typeof ran === 'object' && ran !== null) {
+        return '<span class="message-status status-failed">❌ Error</span>';
+    }
+    
+    // Default case
+    console.log('Unknown status value:', ran);
     return '<span class="message-status status-pending">⏳ Unknown</span>';
 }
 
@@ -635,15 +662,18 @@ async function refreshStatus() {
 async function monitorExecution() {
     console.log('Starting execution monitoring...');
     const startTime = Date.now();
-    const timeout = 30000;
+    const timeout = 60000; // Increased timeout to 60 seconds
     let hasShownMessages = false;
+    let lastMessageCount = 0;
+    let stableCount = 0;
     
     while (Date.now() - startTime < timeout) {
         const statusData = await fetchExecutionStatus();
         
         if (statusData === null) {
-            showStatus('❌ Failed to check execution status', 'error');
-            return;
+            console.log('Status data is null, retrying...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
         }
         
         displayExecutionStatus(statusData);
@@ -663,9 +693,18 @@ async function monitorExecution() {
                 if (Array.isArray(messages)) {
                     totalMessages += messages.length;
                     for (const msg of messages) {
-                        if (msg.ran === null || msg.ran === undefined) pendingMessages++;
-                        else if (msg.ran === true) successMessages++;
-                        else if (msg.ran === false) failedMessages++;
+                        console.log('User message status:', msg.ran, 'for message:', msg);
+                        if (msg.ran === null || msg.ran === undefined) {
+                            pendingMessages++;
+                        } else if (msg.ran === true) {
+                            successMessages++;
+                        } else if (msg.ran === false) {
+                            failedMessages++;
+                        } else {
+                            // Handle other possible values
+                            console.log('Unexpected ran value:', msg.ran);
+                            pendingMessages++;
+                        }
                     }
                 }
             }
@@ -677,9 +716,18 @@ async function monitorExecution() {
                 if (Array.isArray(messages)) {
                     totalMessages += messages.length;
                     for (const msg of messages) {
-                        if (msg.ran === null || msg.ran === undefined) pendingMessages++;
-                        else if (msg.ran === true) successMessages++;
-                        else if (msg.ran === false) failedMessages++;
+                        console.log('Job message status:', msg.ran, 'for message:', msg);
+                        if (msg.ran === null || msg.ran === undefined) {
+                            pendingMessages++;
+                        } else if (msg.ran === true) {
+                            successMessages++;
+                        } else if (msg.ran === false) {
+                            failedMessages++;
+                        } else {
+                            // Handle other possible values
+                            console.log('Unexpected ran value:', msg.ran);
+                            pendingMessages++;
+                        }
                     }
                 }
             }
@@ -690,18 +738,30 @@ async function monitorExecution() {
         if (totalMessages > 0) {
             hasShownMessages = true;
             
-            if (pendingMessages === 0) {
-                // All messages have been processed
+            // Check if message count is stable (no new messages being processed)
+            if (totalMessages === lastMessageCount) {
+                stableCount++;
+            } else {
+                stableCount = 0;
+                lastMessageCount = totalMessages;
+            }
+            
+            // If no pending messages OR if count has been stable for 5 seconds
+            if (pendingMessages === 0 || stableCount >= 5) {
+                // All messages have been processed or system is stable
                 if (successMessages > 0 && failedMessages === 0) {
                     showStatus('✅ Execution completed successfully!', 'success');
                 } else if (failedMessages > 0 && successMessages === 0) {
                     showStatus('❌ Execution failed', 'error');
                 } else if (successMessages > 0 && failedMessages > 0) {
-                    showStatus(`⚠️ Mixed results: ${successMessages} succeeded, ${failedMessages} failed`, 'error');
+                    showStatus(`⚠️ Mixed results: ${successMessages} succeeded, ${failedMessages} failed`, 'warning');
+                } else if (pendingMessages > 0 && stableCount >= 5) {
+                    showStatus(`⏰ ${pendingMessages} messages still pending after timeout`, 'warning');
                 }
                 return;
             }
         } else if (hasShownMessages) {
+            // Messages were there before but now they're gone
             showStatus('✅ Messages completed and cleaned up!', 'success');
             return;
         }
@@ -709,7 +769,7 @@ async function monitorExecution() {
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
-    showStatus('⏰ Monitoring timeout reached', 'info');
+    showStatus('⏰ Monitoring timeout reached - some messages may still be processing', 'warning');
 }
 
 // Handle username form submission
