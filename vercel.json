@@ -38,7 +38,7 @@
       "source": "/",
       "destination": "/login",
       "permanent": false
-    },
+    }
   ],
   "headers": [
     {
