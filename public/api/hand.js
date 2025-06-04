@@ -48,6 +48,7 @@ export default async function handler(req, res) {
 
   } catch (err) {
     // Fallback 403 or 404 page
+    console.log(err)
     res.status(404).send('File not found');
   }
 }
