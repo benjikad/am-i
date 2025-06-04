@@ -11,9 +11,9 @@ export default async function handler(req, res) {
     // Map URLs to private files
     const routesMap = {
       '/login': '/html/login.html',
-      '/dashboard': 'private/api/dashboard.js',
-      '/api/login': 'private/api/login.js',
-      '/api/verify': 'private/api/verify.js',
+      '/dashboard': '/api/dashboard.js',
+      '/api/login': '/api/login.js',
+      '/api/verify': '/api/verify.js',
       '/': '/html/index.html',  // root to index
       // Add more mappings here as needed
     };
