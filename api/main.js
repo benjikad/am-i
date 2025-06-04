@@ -80,7 +80,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = req.body;
+    // Parse request body if it's a string
+    let body;
+    if (typeof req.body === 'string') {
+      body = JSON.parse(req.body);
+    } else {
+      body = req.body;
+    }
+
+    console.log('Request body:', body); // Debug logging
+    
     const data = readData();
     
     // Clean up old messages periodically
@@ -91,7 +100,10 @@ export default async function handler(req, res) {
         // Handle ping from Roblox server - update server info and return messages
         const { jobId, placeId, playerCount, players, timestamp } = body;
         
+        console.log('Ping received from jobId:', jobId); // Debug logging
+        
         if (!jobId) {
+          console.log('Missing jobId in ping request');
           return res.status(400).json({ error: 'Missing jobId' });
         }
 
