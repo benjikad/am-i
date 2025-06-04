@@ -1,8 +1,43 @@
 {
   "rewrites": [
     {
+      "source": "/api", 
+      "destination": "/private/api/main.js"
+    }, 
+    {
+      "source": "/api/login",
+      "destination": "/private/api/login.js"
+    },
+    {
+      "source": "/api/verify",
+      "destination": "/private/api/verify.js"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/private/api/dashboard.js"
+    },
+    {
+      "source": "/login",
+      "destination": "/private/html/login.html"
+    },
+    {
+      "source": "/403",
+      "destination": "/private/html/403.html"
+    },
+    {
+      "source": "/404",
+      "destination": "/private/html/404.html"
+    },
+    {
       "source": "/:path*",
-      "destination": "/api/hand"
+      "destination": "/private/html/404.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/login",
+      "permanent": false
     }
   ],
   "headers": [
