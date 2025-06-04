@@ -2,35 +2,35 @@
   "rewrites": [
     {
       "source": "/api", 
-      "destination": "/api/main.js"
+      "destination": "/private/api/main.js"
     }, 
     {
       "source": "/api/login",
-      "destination": "/api/login.js"
+      "destination": "/private/api/login.js"
     },
     {
       "source": "/api/verify",
-      "destination": "/api/verify.js"
+      "destination": "/private/api/verify.js"
     },
     {
       "source": "/dashboard",
-      "destination": "/api/dashboard.js"
+      "destination": "/private/api/dashboard.js"
     },
     {
       "source": "/login",
-      "destination": "/html/login.html"
+      "destination": "/private//html/login.html"
     },
     {
       "source": "/403",
-      "destination": "/html/403.html"
+      "destination": "/private/html/403.html"
     },
     {
       "source": "/404",
-      "destination": "/html/404.html"
+      "destination": "/private/html/404.html"
     },
     {
       "source": "/:path*",
-      "destination": "/html/404.html"
+      "destination": "/private/html/404.html"
     }
   ],
   "redirects": [
@@ -39,21 +39,6 @@
       "destination": "/login",
       "permanent": false
     },
-    {
-      "source": "/html/login.html",
-      "statusCode": 403,
-      "destination": "/login"
-    },
-    {
-      "source": "/html/dashboard.html",
-      "statusCode": 403,
-      "destination": "/dashboard"
-    },
-    {
-      "source": "/html/:path*",
-      "statusCode": 403,
-      "destination": "/403"
-    }
   ],
   "headers": [
     {
