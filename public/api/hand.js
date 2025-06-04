@@ -42,7 +42,8 @@ export default async function handler(req, res) {
     };
     const contentType = contentTypes[ext] || 'application/octet-stream';
     res.setHeader('Content-Type', contentType);
-
+    console.log('hi')
+    console.log(filePath)
     // Send the file content
     res.status(200).send(fileData);
 
