@@ -1,12 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/login",
-      "destination": "/api/hand?path=/login"
-    },
-    {
-      "source": "/dashboard",
-      "destination": "/api/hand?path=/dashboard"
+      "source": "/:path*",
+      "destination": "/api/hand"
     }
   ],
   "headers": [
