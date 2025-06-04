@@ -26,7 +26,7 @@
             padding: 40px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
         .header {
@@ -46,6 +46,36 @@
         .header p {
             color: #666;
             font-size: 1.1em;
+        }
+        .tab-container {
+            display: flex;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 5px;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
         }
         .form-group {
             margin-bottom: 25px;
@@ -104,6 +134,13 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+        .btn.secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            margin-top: 10px;
+        }
+        .btn.secondary:hover {
+            box-shadow: 0 10px 20px rgba(107, 114, 128, 0.3);
         }
         .loading {
             display: inline-block;
@@ -186,6 +223,10 @@
             font-weight: 600;
             color: #667eea;
         }
+        .message-jobid {
+            font-weight: 600;
+            color: #764ba2;
+        }
         .message-status {
             padding: 4px 8px;
             border-radius: 12px;
@@ -219,6 +260,40 @@
             color: #6b7280;
             margin-top: 8px;
         }
+        .server-status {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            display: none;
+        }
+        .server-status h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.3em;
+        }
+        .server-item {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .server-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .server-jobid {
+            font-weight: 600;
+            color: #0369a1;
+        }
+        .server-players {
+            color: #666;
+            font-size: 14px;
+        }
 
         @media (max-width: 768px) {
             .status-container {
@@ -233,6 +308,14 @@
             .status.show {
                 transform: none;
             }
+            .container {
+                max-width: 100%;
+                padding: 20px;
+            }
+            .tab-button {
+                padding: 10px;
+                font-size: 0.9em;
+            }
         }
     </style>
 </head>
@@ -242,34 +325,84 @@
             <h1>🎮 Roblox Data Sender</h1>
             <p>Send data to your Roblox server endpoint</p>
         </div>
-        <form id="dataForm">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" class="form-control" 
-                       placeholder="Enter your username" required>
-            </div>
-            <div class="form-group">
-                <label for="dataString">Data String</label>
-                <textarea id="dataString" class="form-control" 
-                          placeholder="Enter the string to send with username" required></textarea>
-            </div>
-            <button type="submit" class="btn" id="sendBtn">
-                Send Data
-            </button>
-        </form>
+        
+        <div class="tab-container">
+            <button class="tab-button active" onclick="switchTab('username')">👤 Username</button>
+            <button class="tab-button" onclick="switchTab('jobid')">🖥️ Job ID</button>
+            <button class="tab-button" onclick="switchTab('status')">📊 Status</button>
+        </div>
+
+        <div id="username-tab" class="tab-content active">
+            <form id="usernameForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" class="form-control" 
+                           placeholder="Enter target username" required>
+                </div>
+                <div class="form-group">
+                    <label for="usernameData">Data String</label>
+                    <textarea id="usernameData" class="form-control" 
+                              placeholder="Enter the code/data to send to this user" required></textarea>
+                </div>
+                <button type="submit" class="btn" id="sendUsernameBtn">
+                    Send to Username
+                </button>
+            </form>
+        </div>
+
+        <div id="jobid-tab" class="tab-content">
+            <form id="jobidForm">
+                <div class="form-group">
+                    <label for="jobid">Job ID</label>
+                    <input type="text" id="jobid" class="form-control" 
+                           placeholder="Enter target Job ID" required>
+                </div>
+                <div class="form-group">
+                    <label for="jobidData">Data String</label>
+                    <textarea id="jobidData" class="form-control" 
+                              placeholder="Enter the code/data to send to this server" required></textarea>
+                </div>
+                <button type="submit" class="btn" id="sendJobidBtn">
+                    Send to Job ID
+                </button>
+            </form>
+        </div>
+
+        <div id="status-tab" class="tab-content">
+            <button class="btn secondary" onclick="refreshStatus()">🔄 Refresh Status</button>
+            <div id="serverStatus" class="server-status"></div>
+        </div>
+
         <div id="executionStatus" class="execution-status"></div>
     </div>
 
     <div id="statusContainer" class="status-container"></div>
 
     <script>
-        const form = document.getElementById('dataForm');
         const statusContainer = document.getElementById('statusContainer');
         const executionStatusDiv = document.getElementById('executionStatus');
-        const sendBtn = document.getElementById('sendBtn');
+        const serverStatusDiv = document.getElementById('serverStatus');
         const defaultServerUrl = 'https://am-i-three.vercel.app/api';
         
         let statusIdCounter = 0;
+        let currentTab = 'username';
+        
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tab + '-tab').classList.add('active');
+            
+            currentTab = tab;
+            
+            // Load status if switching to status tab
+            if (tab === 'status') {
+                refreshStatus();
+            }
+        }
         
         function showStatus(message, type, duration = 6000) {
             const statusId = 'status-' + (++statusIdCounter);
@@ -292,7 +425,7 @@
                     if (statusDiv.parentNode) {
                         statusDiv.parentNode.removeChild(statusDiv);
                     }
-                }, 300); // Wait for animation to complete
+                }, 300);
             }, duration);
         }
         
@@ -316,7 +449,7 @@
                         'User-Agent': 'RobloxStudio/1.0',
                         'Referer': 'https://www.roblox.com'
                     },
-                    body: JSON.stringify({ action: 'fetch' }),
+                    body: JSON.stringify({ action: 'status' }),
                     mode: 'cors'
                 });
                 
@@ -325,12 +458,12 @@
                 }
                 
                 const data = await response.json();
-                console.log('Fetch response:', data);
+                console.log('Status response:', data);
                 
-                if (data.success && data.data && data.data.message) {
-                    return data.data.message;
+                if (data.success && data.data) {
+                    return data.data;
                 } else {
-                    return {};
+                    return null;
                 }
             } catch (error) {
                 console.error('Failed to fetch status:', error);
@@ -338,35 +471,78 @@
             }
         }
         
-        function displayExecutionStatus(messages) {
+        function displayExecutionStatus(statusData) {
+            if (!statusData) {
+                executionStatusDiv.innerHTML = '<h3>📋 Execution Status</h3><p>Failed to load status data.</p>';
+                executionStatusDiv.style.display = 'block';
+                return;
+            }
+            
+            const { userMessages, jobIdMessages } = statusData;
             let html = '<h3>📋 Execution Status</h3>';
             
-            if (!messages || Object.keys(messages).length === 0) {
+            const hasUserMessages = userMessages && Object.keys(userMessages).length > 0;
+            const hasJobIdMessages = jobIdMessages && Object.keys(jobIdMessages).length > 0;
+            
+            if (!hasUserMessages && !hasJobIdMessages) {
                 html += '<p>No pending messages.</p>';
             } else {
-                for (const [username, userMessages] of Object.entries(messages)) {
-                    html += `<div class="message-item">
-                        <div class="message-header">
-                            <span class="message-user">👤 ${username}</span>
-                            <span>${userMessages.length} message(s)</span>
-                        </div>`;
-                    
-                    userMessages.forEach(msg => {
-                        html += `
-                            <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <small style="color: #666;">ID: ${msg.id}</small>
-                                    ${getStatusBadge(msg.ran)}
-                                </div>
-                                <div class="message-content">${msg.content}</div>
-                                <div class="message-time">
-                                    Sent: ${formatTime(msg.timestamp)}
-                                    ${msg.executedAt ? `• Executed: ${formatTime(msg.executedAt)}` : ''}
-                                </div>
+                // Display user messages
+                if (hasUserMessages) {
+                    html += '<h4>👤 User Messages</h4>';
+                    for (const [username, messages] of Object.entries(userMessages)) {
+                        html += `<div class="message-item">
+                            <div class="message-header">
+                                <span class="message-user">👤 ${username}</span>
+                                <span>${messages.length} message(s)</span>
                             </div>`;
-                    });
-                    
-                    html += '</div>';
+                        
+                        messages.forEach(msg => {
+                            html += `
+                                <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <small style="color: #666;">ID: ${msg.id}</small>
+                                        ${getStatusBadge(msg.ran)}
+                                    </div>
+                                    <div class="message-content">${msg.content}</div>
+                                    <div class="message-time">
+                                        Sent: ${formatTime(msg.timestamp)}
+                                        ${msg.executedAt ? `• Executed: ${formatTime(msg.executedAt)}` : ''}
+                                    </div>
+                                </div>`;
+                        });
+                        
+                        html += '</div>';
+                    }
+                }
+                
+                // Display job ID messages
+                if (hasJobIdMessages) {
+                    html += '<h4>🖥️ Job ID Messages</h4>';
+                    for (const [jobId, messages] of Object.entries(jobIdMessages)) {
+                        html += `<div class="message-item">
+                            <div class="message-header">
+                                <span class="message-jobid">🖥️ ${jobId}</span>
+                                <span>${messages.length} message(s)</span>
+                            </div>`;
+                        
+                        messages.forEach(msg => {
+                            html += `
+                                <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <small style="color: #666;">ID: ${msg.id}</small>
+                                        ${getStatusBadge(msg.ran)}
+                                    </div>
+                                    <div class="message-content">${msg.content}</div>
+                                    <div class="message-time">
+                                        Sent: ${formatTime(msg.timestamp)}
+                                        ${msg.executedAt ? `• Executed: ${formatTime(msg.executedAt)}` : ''}
+                                    </div>
+                                </div>`;
+                        });
+                        
+                        html += '</div>';
+                    }
                 }
             }
             
@@ -374,23 +550,70 @@
             executionStatusDiv.style.display = 'block';
         }
         
-        // Monitor execution status - stops after success or failure
+        function displayServerStatus(statusData) {
+            if (!statusData || !statusData.servers) {
+                serverStatusDiv.innerHTML = '<h3>🖥️ Server Status</h3><p>No servers currently active.</p>';
+                serverStatusDiv.style.display = 'block';
+                return;
+            }
+            
+            const { servers } = statusData;
+            let html = '<h3>🖥️ Server Status</h3>';
+            
+            if (Object.keys(servers).length === 0) {
+                html += '<p>No servers currently active.</p>';
+            } else {
+                for (const [jobId, serverInfo] of Object.entries(servers)) {
+                    const timeSinceLastPing = Date.now() - (serverInfo.lastPing || 0);
+                    const isOnline = timeSinceLastPing < 30000; // Consider offline if no ping in 30 seconds
+                    
+                    html += `<div class="server-item">
+                        <div class="server-header">
+                            <span class="server-jobid">🖥️ ${jobId}</span>
+                            <span style="color: ${isOnline ? '#059669' : '#dc2626'}; font-weight: 600;">
+                                ${isOnline ? '🟢 Online' : '🔴 Offline'}
+                            </span>
+                        </div>
+                        <div class="server-players">
+                            👥 ${serverInfo.playerCount || 0} players: ${(serverInfo.players || []).join(', ') || 'None'}
+                        </div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                            Last ping: ${serverInfo.lastSeen ? formatTime(new Date(serverInfo.lastSeen).getTime()) : 'Never'}
+                        </div>
+                    </div>`;
+                }
+            }
+            
+            serverStatusDiv.innerHTML = html;
+            serverStatusDiv.style.display = 'block';
+        }
+        
+        async function refreshStatus() {
+            const statusData = await fetchExecutionStatus();
+            if (statusData) {
+                displayExecutionStatus(statusData);
+                displayServerStatus(statusData);
+                showStatus('✅ Status refreshed successfully', 'success', 3000);
+            } else {
+                showStatus('❌ Failed to refresh status', 'error');
+            }
+        }
+        
+        // Monitor execution status
         async function monitorExecution() {
             const startTime = Date.now();
-            const timeout = 30000; // 30 seconds max timeout
+            const timeout = 30000;
             let hasShownMessages = false;
             
             while (Date.now() - startTime < timeout) {
-                const messages = await fetchExecutionStatus();
+                const statusData = await fetchExecutionStatus();
                 
-                if (messages === null) {
-                    // Error occurred, stop monitoring
+                if (statusData === null) {
                     showStatus('❌ Failed to check execution status', 'error');
                     return;
                 }
                 
-                // Display current status
-                displayExecutionStatus(messages);
+                displayExecutionStatus(statusData);
                 
                 // Count total messages and check execution status
                 let totalMessages = 0;
@@ -398,15 +621,26 @@
                 let successMessages = 0;
                 let failedMessages = 0;
                 
-                for (const userMessages of Object.values(messages)) {
-                    totalMessages += userMessages.length;
-                    for (const msg of userMessages) {
-                        if (msg.ran === null) {
-                            pendingMessages++;
-                        } else if (msg.ran === true) {
-                            successMessages++;
-                        } else if (msg.ran === false) {
-                            failedMessages++;
+                // Count user messages
+                if (statusData.userMessages) {
+                    for (const messages of Object.values(statusData.userMessages)) {
+                        totalMessages += messages.length;
+                        for (const msg of messages) {
+                            if (msg.ran === null) pendingMessages++;
+                            else if (msg.ran === true) successMessages++;
+                            else if (msg.ran === false) failedMessages++;
+                        }
+                    }
+                }
+                
+                // Count job ID messages
+                if (statusData.jobIdMessages) {
+                    for (const messages of Object.values(statusData.jobIdMessages)) {
+                        totalMessages += messages.length;
+                        for (const msg of messages) {
+                            if (msg.ran === null) pendingMessages++;
+                            else if (msg.ran === true) successMessages++;
+                            else if (msg.ran === false) failedMessages++;
                         }
                     }
                 }
@@ -416,7 +650,6 @@
                 if (totalMessages > 0) {
                     hasShownMessages = true;
                     
-                    // Stop monitoring if any message has been executed (success or failure)
                     if (successMessages > 0 || failedMessages > 0) {
                         if (successMessages > 0 && failedMessages === 0) {
                             showStatus('✅ Execution completed successfully!', 'success');
@@ -425,65 +658,32 @@
                         } else {
                             showStatus(`⚠️ Mixed results: ${successMessages} succeeded, ${failedMessages} failed`, 'error');
                         }
-                        return; // Stop monitoring after getting results
+                        return;
                     }
                 } else if (hasShownMessages) {
-                    // Messages were there but now gone (completed and removed)
                     showStatus('✅ Messages completed and cleaned up!', 'success');
                     return;
                 }
                 
-                // Wait before next check
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
             
-            // Timeout reached - check final status
-            const finalMessages = await fetchExecutionStatus();
-            let finalPending = 0;
-            let finalSuccess = 0;
-            let finalFailed = 0;
-            
-            if (finalMessages) {
-                for (const userMessages of Object.values(finalMessages)) {
-                    for (const msg of userMessages) {
-                        if (msg.ran === null) {
-                            finalPending++;
-                        } else if (msg.ran === true) {
-                            finalSuccess++;
-                        } else if (msg.ran === false) {
-                            finalFailed++;
-                        }
-                    }
-                }
-            }
-            
-            if (finalSuccess > 0 || finalFailed > 0) {
-                if (finalSuccess > 0 && finalFailed === 0) {
-                    showStatus('✅ Execution completed successfully! (timeout reached)', 'success');
-                } else if (finalFailed > 0 && finalSuccess === 0) {
-                    showStatus('❌ Execution failed (timeout reached)', 'error');
-                } else {
-                    showStatus(`⚠️ Mixed results: ${finalSuccess} succeeded, ${finalFailed} failed (timeout reached)`, 'error');
-                }
-            } else if (finalPending > 0) {
-                showStatus('⏰ Timeout: Messages still pending. Check if your Roblox script is running.', 'error');
-            } else {
-                showStatus('⏰ Monitoring timeout reached - no execution detected', 'error');
-            }
+            showStatus('⏰ Monitoring timeout reached', 'info');
         }
         
-        form.addEventListener('submit', async (e) => {
+        // Handle username form submission
+        document.getElementById('usernameForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const username = document.getElementById('username').value.trim();
-            const dataString = document.getElementById('dataString').value.trim();
+            const dataString = document.getElementById('usernameData').value.trim();
+            const sendBtn = document.getElementById('sendUsernameBtn');
             
             if (!username || !dataString) {
                 showStatus('Please fill in all fields', 'error');
                 return;
             }
             
-            // Show loading state
             sendBtn.disabled = true;
             sendBtn.innerHTML = '<span class="loading"></span>Sending...';
             
@@ -493,9 +693,6 @@
                     data: dataString,
                     timestamp: new Date().toISOString()
                 };
-                
-                console.log('Sending request to:', defaultServerUrl);
-                console.log('Request data:', requestData);
                 
                 const response = await fetch(defaultServerUrl, {
                     method: 'POST',
@@ -508,50 +705,79 @@
                     mode: 'cors'
                 });
                 
-                console.log('Response status:', response.status);
-                
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error('Response error text:', errorText);
                     throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
                 
                 const responseData = await response.json();
-                console.log('Response data:', responseData);
                 
                 if (responseData.success) {
-                    showStatus('✅ Data sent successfully! Monitoring execution...', 'success');
-                    
-                    // Start monitoring execution after a short delay
-                    setTimeout(() => {
-                        monitorExecution();
-                    }, 1000);
+                    showStatus(`✅ Data sent to username "${username}"! Monitoring execution...`, 'success');
+                    setTimeout(() => monitorExecution(), 1000);
                 } else {
                     showStatus(`❌ Server error: ${responseData.error || 'Unknown error'}`, 'error');
                 }
             } catch (error) {
-                console.error('Request failed:', error);
+                showStatus(`❌ Request failed: ${error.message}`, 'error');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = 'Send to Username';
+            }
+        });
+        
+        // Handle job ID form submission
+        document.getElementById('jobidForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const jobId = document.getElementById('jobid').value.trim();
+            const dataString = document.getElementById('jobidData').value.trim();
+            const sendBtn = document.getElementById('sendJobidBtn');
+            
+            if (!jobId || !dataString) {
+                showStatus('Please fill in all fields', 'error');
+                return;
+            }
+            
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<span class="loading"></span>Sending...';
+            
+            try {
+                const requestData = {
+                    jobId: jobId,
+                    data: dataString,
+                    timestamp: new Date().toISOString()
+                };
                 
-                let errorMessage = `❌ Request failed: ${error.message}`;
+                const response = await fetch(defaultServerUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'RobloxStudio/1.0',
+                        'Referer': 'https://www.roblox.com'
+                    },
+                    body: JSON.stringify(requestData),
+                    mode: 'cors'
+                });
                 
-                // Provide specific guidance for common errors
-                if (error.message.includes('Failed to fetch')) {
-                    errorMessage += '\n\n🔧 Possible solutions:\n' +
-                        '• Check if the server is running and accessible\n' +
-                        '• Make sure the server allows CORS for browser requests\n' +
-                        '• Try using a tool like Postman to test the endpoint directly';
-                } else if (error.message.includes('CORS')) {
-                    errorMessage += '\n\n🔧 CORS Issue:\n' +
-                        'The server needs to include CORS headers like:\n' +
-                        'Access-Control-Allow-Origin: *\n' +
-                        'Access-Control-Allow-Headers: Content-Type, User-Agent';
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
                 
-                showStatus(errorMessage, 'error');
+                const responseData = await response.json();
+                
+                if (responseData.success) {
+                    showStatus(`✅ Data sent to Job ID "${jobId}"! Monitoring execution...`, 'success');
+                    setTimeout(() => monitorExecution(), 1000);
+                } else {
+                    showStatus(`❌ Server error: ${responseData.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Request failed: ${error.message}`, 'error');
             } finally {
-                // Reset button state
                 sendBtn.disabled = false;
-                sendBtn.innerHTML = 'Send Data';
+                sendBtn.innerHTML = 'Send to Job ID';
             }
         });
     </script>
