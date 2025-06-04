@@ -4,5 +4,5 @@ const path = require('path');
 export default function handler(req, res) {
     console.log(path)
 
-    req.status(403)
+    req.status(404)
 }
