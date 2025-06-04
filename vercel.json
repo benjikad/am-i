@@ -42,7 +42,12 @@
     {
       "source": "/html/login.html",
       "statusCode": 403,
-      "destination": "/403"
+      "destination": "/login"
+    },,
+    {
+      "source": "/html/dashboard.html",
+      "statusCode": 403,
+      "destination": "/dashboard"
     },
     {
       "source": "/html/:path*",
