@@ -18,7 +18,7 @@
     },
     {
       "source": "/login",
-      "destination": "/private//html/login.html"
+      "destination": "/private/html/login.html"
     },
     {
       "source": "/403",
