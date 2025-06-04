@@ -31,6 +31,14 @@
     {
       "source": "/:path*",
       "destination": "/private/html/404.html"
+    },
+    {
+      "source": "/api/dashboard.js",
+      "destination": "/private/html/404.html"
+    },
+    {
+      "source": "/api/verify.js",
+      "destination": "/private/html/404.html"
     }
   ],
   "redirects": [
