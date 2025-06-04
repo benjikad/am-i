@@ -516,20 +516,72 @@ function displayExecutionStatus(statusData) {
     let messageData = statusData.message || statusData;
     console.log('Message data:', messageData);
     
+    // Check for the new executedMessages structure
+    const executedMessages = messageData.executedMessages || [];
     const users = messageData.users || {};
     const jobids = messageData.jobids || {};
     
     let html = '<h3>📋 Execution Status</h3>';
     
+    const hasExecutedMessages = executedMessages.length > 0;
     const hasUserMessages = Object.keys(users).length > 0;
     const hasJobIdMessages = Object.keys(jobids).length > 0;
     
-    console.log('Has user messages:', hasUserMessages, 'Has job messages:', hasJobIdMessages);
+    console.log('Has executed messages:', hasExecutedMessages, 'Has user messages:', hasUserMessages, 'Has job messages:', hasJobIdMessages);
     
-    if (!hasUserMessages && !hasJobIdMessages) {
-        html += '<p>No pending messages.</p>';
+    if (!hasExecutedMessages && !hasUserMessages && !hasJobIdMessages) {
+        html += '<p>No messages found.</p>';
     } else {
-        // Display user messages
+        // Display executed messages (new format)
+        if (hasExecutedMessages) {
+            html += '<h4>📨 Recent Messages</h4>';
+            
+            // Group messages by type and target
+            const groupedMessages = {};
+            
+            executedMessages.forEach(msg => {
+                const key = `${msg.type}-${msg.target}`;
+                if (!groupedMessages[key]) {
+                    groupedMessages[key] = {
+                        type: msg.type,
+                        target: msg.target,
+                        messages: []
+                    };
+                }
+                groupedMessages[key].messages.push(msg);
+            });
+            
+            for (const [key, group] of Object.entries(groupedMessages)) {
+                const icon = group.type === 'username' ? '👤' : '🖥️';
+                const label = group.type === 'username' ? 'Username' : 'Job ID';
+                
+                html += `<div class="message-item">
+                    <div class="message-header">
+                        <span class="message-${group.type}">${icon} ${label}: ${group.target}</span>
+                        <span>${group.messages.length} message(s)</span>
+                    </div>`;
+                
+                group.messages.forEach(msg => {
+                    console.log('Processing executed message:', msg);
+                    html += `
+                        <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <small style="color: #666;">ID: ${msg.id || 'Unknown'}</small>
+                                ${getStatusBadge(msg.ran)}
+                            </div>
+                            <div class="message-content">${msg.content || msg.data || 'No content'}</div>
+                            <div class="message-time">
+                                Sent: ${msg.timestamp ? formatTime(msg.timestamp) : 'Unknown time'}
+                                ${msg.executedAt ? `• Executed: ${formatTime(msg.executedAt)}` : ''}
+                            </div>
+                        </div>`;
+                });
+                
+                html += '</div>';
+            }
+        }
+        
+        // Display user messages (old format - keep for compatibility)
         if (hasUserMessages) {
             html += '<h4>👤 User Messages</h4>';
             for (const [username, messages] of Object.entries(users)) {
@@ -566,7 +618,7 @@ function displayExecutionStatus(statusData) {
             }
         }
         
-        // Display job ID messages
+        // Display job ID messages (old format - keep for compatibility)
         if (hasJobIdMessages) {
             html += '<h4>🖥️ Job ID Messages</h4>';
             for (const [jobId, messages] of Object.entries(jobids)) {
@@ -713,7 +765,28 @@ async function monitorExecution() {
             
             const messageData = statusData.message || statusData;
             
-            // Process user messages
+            // Process executedMessages (new format)
+            if (messageData.executedMessages && Array.isArray(messageData.executedMessages)) {
+                totalMessages += messageData.executedMessages.length;
+                for (const msg of messageData.executedMessages) {
+                    const status = checkMessageStatus(msg.ran);
+                    switch (status) {
+                        case 'success':
+                            successMessages++;
+                            break;
+                        case 'failed':
+                            failedMessages++;
+                            break;
+                        case 'pending':
+                        case 'unknown':
+                        default:
+                            pendingMessages++;
+                            break;
+                    }
+                }
+            }
+            
+            // Process user messages (old format)
             if (messageData.users) {
                 for (const messages of Object.values(messageData.users)) {
                     if (Array.isArray(messages)) {
@@ -738,7 +811,7 @@ async function monitorExecution() {
                 }
             }
             
-            // Process job ID messages
+            // Process job ID messages (old format)
             if (messageData.jobids) {
                 for (const messages of Object.values(messageData.jobids)) {
                     if (Array.isArray(messages)) {
