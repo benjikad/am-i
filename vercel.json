@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api", 
-      "destination": "/private/api/main.js"
+      "destination": "/api/main.js"
     }, 
     {
       "source": "/api/login",
-      "destination": "/private/api/login.js"
+      "destination": "/api/login.js"
     },
     {
       "source": "/api/verify",
-      "destination": "/private/api/verify.js"
+      "destination": "/api/verify.js"
     },
     {
       "source": "/dashboard",
-      "destination": "/private/api/dashboard.js"
+      "destination": "/api/dashboard.js"
     },
     {
       "source": "/login",
