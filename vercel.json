@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/:path*",
-      "destination": "/hand.js"
+      "destination": "/api/hand.js"
     }
   ],
   "headers": [
