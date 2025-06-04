@@ -2,7 +2,8 @@
 import fs from 'fs';
 import path from 'path';
 
-const DATA_FILE = path.join(process.cwd(), 'data.json');
+// Use /tmp directory for serverless environments (writable)
+const DATA_FILE = path.join('/tmp', 'data.json');
 
 // Initialize data structure
 const initData = {
@@ -25,6 +26,12 @@ function readData() {
 
 function writeData(data) {
   try {
+    // Ensure /tmp directory exists
+    const tmpDir = path.dirname(DATA_FILE);
+    if (!fs.existsSync(tmpDir)) {
+      fs.mkdirSync(tmpDir, { recursive: true });
+    }
+    
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
   } catch (error) {
     console.error('Error writing data file:', error);
