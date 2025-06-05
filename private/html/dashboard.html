@@ -435,26 +435,19 @@ function formatTime(timestamp) {
 }
 
 function getStatusBadge(message, allStatusData) {
-    // If this is called from executedMessages, it means the message was executed
-    if (message.executedAt || message.id) {
-        // Check if this message ID exists in executedMessages
-        if (allStatusData && allStatusData.executedMessages) {
-            const executedMessage = allStatusData.executedMessages.find(msg => msg.id === message.id);
-            if (executedMessage) {
-                return '<span class="message-status status-success">✅ Success</span>';
-            }
-        }
-        
-        // If we have executedAt timestamp, it means it was executed
-        if (message.executedAt) {
+    // If message has executedAt, it was executed - check ran field for success/failure
+    if (message.executedAt) {
+        if (message.ran === true) {
             return '<span class="message-status status-success">✅ Success</span>';
+        } else if (message.ran === false) {
+            return '<span class="message-status status-failed">❌ Failed</span>';
         }
     }
     
     // If message is still in pending messages (users/jobids), it's pending
     return '<span class="message-status status-pending">⏳ Pending</span>';
 }
-
+        
 async function fetchExecutionStatus() {
     try {
         console.log('Fetching execution status...');
@@ -552,7 +545,7 @@ function displayExecutionStatus(statusData) {
                         <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <small style="color: #666;">ID: ${msg.id || 'Unknown'}</small>
-                                <span class="message-status status-success">✅ Success</span>
+                                ${getStatusBadge(msg)}
                             </div>
                             <div class="message-content">${msg.content || msg.data || 'No content'}</div>
                             <div class="message-time">
@@ -818,6 +811,7 @@ async function monitorExecution() {
         console.log('Monitoring stopped');
     }
 }
+        
 // Handle username form submission
 document.getElementById('usernameForm').addEventListener('submit', async (e) => {
     e.preventDefault();
