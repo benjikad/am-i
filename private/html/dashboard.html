@@ -497,10 +497,13 @@ function displayExecutionStatus(statusData) {
         return;
     }
     
-    let messageData = statusData.message || statusData;
+    // executedMessages is at the top level of statusData
+    const executedMessages = statusData.executedMessages || [];
+    
+    // users and jobids are inside the message object
+    let messageData = statusData.message || {};
     console.log('Message data:', messageData);
     
-    const executedMessages = messageData.executedMessages || [];
     const users = messageData.users || {};
     const jobids = messageData.jobids || {};
     
@@ -740,11 +743,12 @@ async function monitorExecution() {
             
             displayExecutionStatus(statusData);
             
-            const messageData = statusData.message || statusData;
-            
-            // Count executed messages
-            const executedMessages = messageData.executedMessages || [];
+            // executedMessages is at the top level of statusData
+            const executedMessages = statusData.executedMessages || [];
             const executedCount = executedMessages.length;
+            
+            // users and jobids are inside the message object
+            const messageData = statusData.message || {};
             
             // Count pending messages
             let pendingCount = 0;
