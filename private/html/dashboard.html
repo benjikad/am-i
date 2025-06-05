@@ -449,33 +449,55 @@ function getStatusBadge(message, allStatusData) {
 }
 
 async function fetchPlaceInfo(placeId) {
-    try {
-        // Use a CORS proxy to bypass CORS restrictions
-        const proxyUrl = 'https://corsproxy.io/?';
-        
-        // First get the universe ID from place ID
-        const universeResponse = await fetch(`${proxyUrl}https://apis.roblox.com/universes/v1/places/${placeId}/universe`);
-        const universeData = await universeResponse.json();
-        
-        if (!universeData.universeId) {
-            throw new Error('No universe ID found');
-        }
-        
-        // Then get game info from universe ID
-        const gameResponse = await fetch(`${proxyUrl}https://games.roblox.com/v1/games?universeIds=${universeData.universeId}`);
-        const gameData = await gameResponse.json();
-        
-        if (gameData.data && gameData.data[0]) {
-            const game = gameData.data[0];
-            return {
-                name: game.name,
-                thumbnailUrl: `https://www.roblox.com/asset-thumbnail/image?assetId=${placeId}&width=150&height=150&format=png`
-            };
-        }
-    } catch (error) {
-        console.error('Failed to fetch place info:', error);
+  try {
+    // Use a CORS proxy to bypass CORS restrictions
+    const proxyUrl = 'https://corsproxy.io/?';
+    
+    // First get the universe ID from place ID
+    const universeResponse = await fetch(`${proxyUrl}https://apis.roblox.com/universes/v1/places/${placeId}/universe`);
+    const universeData = await universeResponse.json();
+    
+    if (!universeData.universeId) {
+      throw new Error('No universe ID found');
     }
-    return { name: 'Unknown Place', thumbnailUrl: null };
+    
+    // Then get game info from universe ID
+    const gameResponse = await fetch(`${proxyUrl}https://games.roblox.com/v1/games?universeIds=${universeData.universeId}`);
+    const gameData = await gameResponse.json();
+    
+    if (gameData.data && gameData.data[0]) {
+      const game = gameData.data[0];
+      
+      // Get high-quality thumbnail using the better endpoint
+      const thumbnailResponse = await fetch(`${proxyUrl}https://thumbnails.roblox.com/v1/games/icons?universeIds=${universeData.universeId}&size=512x512&format=Png&isCircular=false`);
+      const thumbnailData = await thumbnailResponse.json();
+      
+      let thumbnailUrl = null;
+      if (thumbnailData.data && thumbnailData.data[0] && thumbnailData.data[0].imageUrl) {
+        thumbnailUrl = thumbnailData.data[0].imageUrl;
+      }
+      
+      return {
+        name: game.name,
+        description: game.description,
+        creator: game.creator,
+        playing: game.playing,
+        visits: game.visits,
+        maxPlayers: game.maxPlayers,
+        created: game.created,
+        updated: game.updated,
+        universeId: universeData.universeId,
+        thumbnailUrl: thumbnailUrl
+      };
+    }
+  } catch (error) {
+    console.error('Failed to fetch place info:', error);
+  }
+  
+  return {
+    name: 'Unknown Place',
+    thumbnailUrl: null
+  };
 }
         
 async function fetchExecutionStatus() {
