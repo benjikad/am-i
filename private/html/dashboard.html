@@ -434,40 +434,25 @@ function formatTime(timestamp) {
     return new Date(timestamp).toLocaleTimeString();
 }
 
-function getStatusBadge(ran) {
-    console.log('Status badge for ran:', ran, 'type:', typeof ran);
-    
-    // Normalize the value for comparison
-    const normalizedRan = String(ran).toLowerCase();
-    
-    // Handle different string representations
-    if (normalizedRan === 'true' || normalizedRan === '1') {
-        return '<span class="message-status status-success">✅ Success</span>';
-    } else if (normalizedRan === 'false' || normalizedRan === '0') {
-        return '<span class="message-status status-failed">❌ Failed</span>';
-    } else if (normalizedRan === 'null' || normalizedRan === 'undefined' || normalizedRan === '') {
-        return '<span class="message-status status-pending">⏳ Pending</span>';
+function getStatusBadge(message, allStatusData) {
+    // If this is called from executedMessages, it means the message was executed
+    if (message.executedAt || message.id) {
+        // Check if this message ID exists in executedMessages
+        if (allStatusData && allStatusData.executedMessages) {
+            const executedMessage = allStatusData.executedMessages.find(msg => msg.id === message.id);
+            if (executedMessage) {
+                return '<span class="message-status status-success">✅ Success</span>';
+            }
+        }
+        
+        // If we have executedAt timestamp, it means it was executed
+        if (message.executedAt) {
+            return '<span class="message-status status-success">✅ Success</span>';
+        }
     }
     
-    // Handle actual boolean and null values
-    if (ran === null || ran === undefined) {
-        return '<span class="message-status status-pending">⏳ Pending</span>';
-    }
-    if (ran === true) {
-        return '<span class="message-status status-success">✅ Success</span>';
-    }
-    if (ran === false) {
-        return '<span class="message-status status-failed">❌ Failed</span>';
-    }
-    
-    // Handle error objects
-    if (typeof ran === 'object' && ran !== null) {
-        return '<span class="message-status status-failed">❌ Error</span>';
-    }
-    
-    // Default case
-    console.log('Unknown status value:', ran);
-    return '<span class="message-status status-unknown">❓ Unknown</span>';
+    // If message is still in pending messages (users/jobids), it's pending
+    return '<span class="message-status status-pending">⏳ Pending</span>';
 }
 
 async function fetchExecutionStatus() {
@@ -512,11 +497,9 @@ function displayExecutionStatus(statusData) {
         return;
     }
     
-    // Handle different possible data structures
     let messageData = statusData.message || statusData;
     console.log('Message data:', messageData);
     
-    // Check for the new executedMessages structure
     const executedMessages = messageData.executedMessages || [];
     const users = messageData.users || {};
     const jobids = messageData.jobids || {};
@@ -532,11 +515,10 @@ function displayExecutionStatus(statusData) {
     if (!hasExecutedMessages && !hasUserMessages && !hasJobIdMessages) {
         html += '<p>No messages found.</p>';
     } else {
-        // Display executed messages (new format)
+        // Display executed messages (successful)
         if (hasExecutedMessages) {
-            html += '<h4>📨 Recent Messages</h4>';
+            html += '<h4>📨 Executed Messages</h4>';
             
-            // Group messages by type and target
             const groupedMessages = {};
             
             executedMessages.forEach(msg => {
@@ -567,7 +549,7 @@ function displayExecutionStatus(statusData) {
                         <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <small style="color: #666;">ID: ${msg.id || 'Unknown'}</small>
-                                ${getStatusBadge(msg.ran)}
+                                <span class="message-status status-success">✅ Success</span>
                             </div>
                             <div class="message-content">${msg.content || msg.data || 'No content'}</div>
                             <div class="message-time">
@@ -581,9 +563,9 @@ function displayExecutionStatus(statusData) {
             }
         }
         
-        // Display user messages (old format - keep for compatibility)
+        // Display pending user messages
         if (hasUserMessages) {
-            html += '<h4>👤 User Messages</h4>';
+            html += '<h4>👤 Pending User Messages</h4>';
             for (const [username, messages] of Object.entries(users)) {
                 console.log(`Processing user ${username} with messages:`, messages);
                 
@@ -599,17 +581,16 @@ function displayExecutionStatus(statusData) {
                     </div>`;
                 
                 messages.forEach(msg => {
-                    console.log('Processing message:', msg);
+                    console.log('Processing pending user message:', msg);
                     html += `
                         <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <small style="color: #666;">ID: ${msg.id || 'Unknown'}</small>
-                                ${getStatusBadge(msg.ran)}
+                                <span class="message-status status-pending">⏳ Pending</span>
                             </div>
                             <div class="message-content">${msg.content || msg.data || 'No content'}</div>
                             <div class="message-time">
                                 Sent: ${msg.timestamp ? formatTime(msg.timestamp) : 'Unknown time'}
-                                ${msg.executedAt ? `• Executed: ${formatTime(msg.executedAt)}` : ''}
                             </div>
                         </div>`;
                 });
@@ -618,9 +599,9 @@ function displayExecutionStatus(statusData) {
             }
         }
         
-        // Display job ID messages (old format - keep for compatibility)
+        // Display pending job ID messages
         if (hasJobIdMessages) {
-            html += '<h4>🖥️ Job ID Messages</h4>';
+            html += '<h4>🖥️ Pending Job ID Messages</h4>';
             for (const [jobId, messages] of Object.entries(jobids)) {
                 console.log(`Processing job ID ${jobId} with messages:`, messages);
                 
@@ -636,17 +617,16 @@ function displayExecutionStatus(statusData) {
                     </div>`;
                 
                 messages.forEach(msg => {
-                    console.log('Processing job message:', msg);
+                    console.log('Processing pending job message:', msg);
                     html += `
                         <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <small style="color: #666;">ID: ${msg.id || 'Unknown'}</small>
-                                ${getStatusBadge(msg.ran)}
+                                <span class="message-status status-pending">⏳ Pending</span>
                             </div>
                             <div class="message-content">${msg.content || msg.data || 'No content'}</div>
                             <div class="message-time">
                                 Sent: ${msg.timestamp ? formatTime(msg.timestamp) : 'Unknown time'}
-                                ${msg.executedAt ? `• Executed: ${formatTime(msg.executedAt)}` : ''}
                             </div>
                         </div>`;
                 });
@@ -713,43 +693,22 @@ async function refreshStatus() {
 }
 
 // Improved status checking function
-function checkMessageStatus(ran) {
-    // Handle null/undefined/empty cases first
-    if (ran === null || ran === undefined || ran === '') {
-        return 'pending';
+function checkMessageStatus(message, allStatusData) {
+    // If message exists in executedMessages, it's successful
+    if (allStatusData && allStatusData.executedMessages) {
+        const executedMessage = allStatusData.executedMessages.find(msg => msg.id === message.id);
+        if (executedMessage) {
+            return 'success';
+        }
     }
     
-    // Handle boolean values directly
-    if (ran === true) {
+    // If message has executedAt timestamp, it's successful
+    if (message.executedAt) {
         return 'success';
     }
-    if (ran === false) {
-        return 'failed';
-    }
     
-    // Handle string representations
-    if (typeof ran === 'string') {
-        const normalizedRan = ran.toLowerCase().trim();
-        
-        if (normalizedRan === 'true' || normalizedRan === '1') {
-            return 'success';
-        } else if (normalizedRan === 'false' || normalizedRan === '0') {
-            return 'failed';
-        } else if (normalizedRan === 'null' || normalizedRan === 'undefined') {
-            return 'pending';
-        }
-    }
-    
-    // Handle number values
-    if (typeof ran === 'number') {
-        if (ran === 1) {
-            return 'success';
-        } else if (ran === 0) {
-            return 'failed';
-        }
-    }
-    
-    return 'unknown';
+    // Otherwise, it's still pending
+    return 'pending';
 }
 
 // Monitor execution status with improved logic
@@ -765,9 +724,9 @@ async function monitorExecution() {
     const startTime = Date.now();
     const timeout = 60000; // 60 seconds timeout
     let consecutiveEmptyChecks = 0;
-    let lastTotalMessages = 0;
+    let lastExecutedCount = 0;
     let stableChecks = 0;
-    const maxStableChecks = 3; // Wait for 3 stable checks before concluding
+    const maxStableChecks = 3;
     
     try {
         while (Date.now() - startTime < timeout) {
@@ -781,88 +740,36 @@ async function monitorExecution() {
             
             displayExecutionStatus(statusData);
             
-            // Count messages and their statuses
-            let totalMessages = 0;
-            let pendingMessages = 0;
-            let successMessages = 0;
-            let failedMessages = 0;
-            
             const messageData = statusData.message || statusData;
             
-            // Process executedMessages (new format)
-            if (messageData.executedMessages && Array.isArray(messageData.executedMessages)) {
-                totalMessages += messageData.executedMessages.length;
-                for (const msg of messageData.executedMessages) {
-                    const status = checkMessageStatus(msg.ran);
-                    switch (status) {
-                        case 'success':
-                            successMessages++;
-                            break;
-                        case 'failed':
-                            failedMessages++;
-                            break;
-                        case 'pending':
-                        case 'unknown':
-                        default:
-                            pendingMessages++;
-                            break;
-                    }
-                }
-            }
+            // Count executed messages
+            const executedMessages = messageData.executedMessages || [];
+            const executedCount = executedMessages.length;
             
-            // Process user messages (old format)
+            // Count pending messages
+            let pendingCount = 0;
+            
             if (messageData.users) {
                 for (const messages of Object.values(messageData.users)) {
                     if (Array.isArray(messages)) {
-                        totalMessages += messages.length;
-                        for (const msg of messages) {
-                            const status = checkMessageStatus(msg.ran);
-                            switch (status) {
-                                case 'success':
-                                    successMessages++;
-                                    break;
-                                case 'failed':
-                                    failedMessages++;
-                                    break;
-                                case 'pending':
-                                case 'unknown':
-                                default:
-                                    pendingMessages++;
-                                    break;
-                            }
-                        }
+                        pendingCount += messages.length;
                     }
                 }
             }
             
-            // Process job ID messages (old format)
             if (messageData.jobids) {
                 for (const messages of Object.values(messageData.jobids)) {
                     if (Array.isArray(messages)) {
-                        totalMessages += messages.length;
-                        for (const msg of messages) {
-                            const status = checkMessageStatus(msg.ran);
-                            switch (status) {
-                                case 'success':
-                                    successMessages++;
-                                    break;
-                                case 'failed':
-                                    failedMessages++;
-                                    break;
-                                case 'pending':
-                                case 'unknown':
-                                default:
-                                    pendingMessages++;
-                                    break;
-                            }
-                        }
+                        pendingCount += messages.length;
                     }
                 }
             }
             
-            console.log(`Total: ${totalMessages}, Pending: ${pendingMessages}, Success: ${successMessages}, Failed: ${failedMessages}`);
+            console.log(`Executed: ${executedCount}, Pending: ${pendingCount}`);
             
-            // Check if we have no messages
+            // Check if we have messages to monitor
+            const totalMessages = executedCount + pendingCount;
+            
             if (totalMessages === 0) {
                 consecutiveEmptyChecks++;
                 if (consecutiveEmptyChecks >= 3) {
@@ -873,24 +780,23 @@ async function monitorExecution() {
             } else {
                 consecutiveEmptyChecks = 0;
                 
-                // Check if message count and status are stable
-                if (totalMessages === lastTotalMessages && pendingMessages === 0) {
+                // Check if executed count is stable and no pending messages
+                if (executedCount === lastExecutedCount && pendingCount === 0 && executedCount > 0) {
                     stableChecks++;
                 } else {
                     stableChecks = 0;
-                    lastTotalMessages = totalMessages;
+                    lastExecutedCount = executedCount;
                 }
                 
-                // If all messages are processed or we have enough stable checks
-                if (pendingMessages === 0 && stableChecks >= maxStableChecks) {
-                    if (successMessages > 0 && failedMessages === 0) {
-                        showStatus('✅ All messages executed successfully!', 'success');
-                    } else if (failedMessages > 0 && successMessages === 0) {
-                        showStatus('❌ All messages failed to execute', 'error');
-                    } else if (successMessages > 0 && failedMessages > 0) {
-                        showStatus(`⚠️ Mixed results: ${successMessages} succeeded, ${failedMessages} failed`, 'warning');
-                    }
+                // If no pending messages and we have executed messages
+                if (pendingCount === 0 && executedCount > 0 && stableChecks >= maxStableChecks) {
+                    showStatus(`✅ All ${executedCount} message(s) executed successfully!`, 'success');
                     break;
+                }
+                
+                // If we have pending messages, show status
+                if (pendingCount > 0) {
+                    showStatus(`⏳ ${pendingCount} message(s) pending, ${executedCount} executed`, 'info', 2000);
                 }
             }
             
@@ -908,7 +814,6 @@ async function monitorExecution() {
         console.log('Monitoring stopped');
     }
 }
-
 // Handle username form submission
 document.getElementById('usernameForm').addEventListener('submit', async (e) => {
     e.preventDefault();
