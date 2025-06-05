@@ -379,77 +379,20 @@
     <div id="statusContainer" class="status-container"></div>
 
     <script>
-        const statusContainer = document.getElementById('statusContainer');
-const executionStatusDiv = document.getElementById('executionStatus');
-const serverStatusDiv = document.getElementById('serverStatus');
-const defaultServerUrl = 'https://am-i-three.vercel.app/api';
+        // Add this at the top with other global variables
+const placeInfoCache = new Map(); // Cache to store place info by ID
 
-let statusIdCounter = 0;
-let currentTab = 'username';
-let isMonitoring = false; // Add flag to prevent multiple monitoring instances
-
-function switchTab(tab) {
-    // Update tab buttons
-    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    // Update tab content
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    document.getElementById(tab + '-tab').classList.add('active');
-    
-    currentTab = tab;
-    
-    // Load status if switching to status tab
-    if (tab === 'status') {
-        refreshStatus();
-    }
-}
-
-function showStatus(message, type, duration = 6000) {
-    const statusId = 'status-' + (++statusIdCounter);
-    const statusDiv = document.createElement('div');
-    statusDiv.id = statusId;
-    statusDiv.className = `status ${type}`;
-    statusDiv.innerHTML = message;
-    
-    statusContainer.appendChild(statusDiv);
-    
-    // Trigger animation
-    setTimeout(() => {
-        statusDiv.classList.add('show');
-    }, 10);
-    
-    // Auto remove after duration
-    setTimeout(() => {
-        statusDiv.classList.remove('show');
-        setTimeout(() => {
-            if (statusDiv.parentNode) {
-                statusDiv.parentNode.removeChild(statusDiv);
-            }
-        }, 300);
-    }, duration);
-}
-
-function formatTime(timestamp) {
-    return new Date(timestamp).toLocaleTimeString();
-}
-
-function getStatusBadge(message, allStatusData) {
-    // If message has executedAt, it was executed - check ran field for success/failure
-    if (message.executedAt) {
-        if (message.ran === true) {
-            return '<span class="message-status status-success">✅ Success</span>';
-        } else if (message.ran === false) {
-            return '<span class="message-status status-failed">❌ Failed</span>';
-        }
-    }
-    
-    // If message is still in pending messages (users/jobids), it's pending
-    return '<span class="message-status status-pending">⏳ Pending</span>';
-}
-
+// Modified fetchPlaceInfo function with caching
 async function fetchPlaceInfo(placeId) {
+  // Check if we already have this ID cached
+  if (placeInfoCache.has(placeId)) {
+    console.log(`Using cached data for place ID: ${placeId}`);
+    return placeInfoCache.get(placeId);
+  }
+
   try {
+    console.log(`Fetching new data for place ID: ${placeId}`);
+    
     // Use a CORS proxy to bypass CORS restrictions
     const proxyUrl = 'https://corsproxy.io/?';
     
@@ -465,6 +408,11 @@ async function fetchPlaceInfo(placeId) {
     const gameResponse = await fetch(`${proxyUrl}https://games.roblox.com/v1/games?universeIds=${universeData.universeId}`);
     const gameData = await gameResponse.json();
     
+    let placeInfo = {
+      name: 'Unknown Place',
+      thumbnailUrl: null
+    };
+    
     if (gameData.data && gameData.data[0]) {
       const game = gameData.data[0];
       
@@ -477,7 +425,7 @@ async function fetchPlaceInfo(placeId) {
         thumbnailUrl = thumbnailData.data[0].imageUrl;
       }
       
-      return {
+      placeInfo = {
         name: game.name,
         description: game.description,
         creator: game.creator,
@@ -490,204 +438,29 @@ async function fetchPlaceInfo(placeId) {
         thumbnailUrl: thumbnailUrl
       };
     }
+    
+    // Cache the result
+    placeInfoCache.set(placeId, placeInfo);
+    console.log(`Cached data for place ID: ${placeId}`);
+    
+    return placeInfo;
+    
   } catch (error) {
     console.error('Failed to fetch place info:', error);
+    
+    // Cache the error result to prevent retrying
+    const errorResult = {
+      name: 'Unknown Place',
+      thumbnailUrl: null,
+      error: true
+    };
+    
+    placeInfoCache.set(placeId, errorResult);
+    return errorResult;
   }
-  
-  return {
-    name: 'Unknown Place',
-    thumbnailUrl: null
-  };
-}
-        
-async function fetchExecutionStatus() {
-    try {
-        console.log('Fetching execution status...');
-        const response = await fetch(defaultServerUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': 'RobloxStudio/1.0',
-                'Referer': 'https://www.roblox.com'
-            },
-            body: JSON.stringify({ action: 'status' }),
-            mode: 'cors'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Full status response:', data);
-        
-        if (data.success && data.data) {
-            return data.data;
-        } else {
-            console.log('No success or data in response');
-            return null;
-        }
-    } catch (error) {
-        console.error('Failed to fetch status:', error);
-        return null;
-    }
 }
 
-function displayExecutionStatus(statusData) {
-    console.log('Displaying execution status with data:', statusData);
-    
-    if (!statusData) {
-        executionStatusDiv.innerHTML = '<h3>📋 Execution Status</h3><p>Failed to load status data.</p>';
-        executionStatusDiv.style.display = 'block';
-        return;
-    }
-    
-    // executedMessages is at the top level of statusData
-    const executedMessages = statusData.executedMessages || [];
-    
-    // users and jobids are inside the message object
-    let messageData = statusData.message || {};
-    console.log('Message data:', messageData);
-    
-    const users = messageData.users || {};
-    const jobids = messageData.jobids || {};
-    
-    let html = '<h3>📋 Execution Status</h3>';
-    
-    const hasExecutedMessages = executedMessages.length > 0;
-    const hasUserMessages = Object.keys(users).length > 0;
-    const hasJobIdMessages = Object.keys(jobids).length > 0;
-    
-    console.log('Has executed messages:', hasExecutedMessages, 'Has user messages:', hasUserMessages, 'Has job messages:', hasJobIdMessages);
-    
-    if (!hasExecutedMessages && !hasUserMessages && !hasJobIdMessages) {
-        html += '<p>No messages found.</p>';
-    } else {
-        // Display executed messages (successful)
-        if (hasExecutedMessages) {
-            html += '<h4>📨 Executed Messages</h4>';
-            
-            const groupedMessages = {};
-            
-            executedMessages.forEach(msg => {
-                const key = `${msg.type}-${msg.target}`;
-                if (!groupedMessages[key]) {
-                    groupedMessages[key] = {
-                        type: msg.type,
-                        target: msg.target,
-                        messages: []
-                    };
-                }
-                groupedMessages[key].messages.push(msg);
-            });
-            
-            for (const [key, group] of Object.entries(groupedMessages)) {
-                const icon = group.type === 'username' ? '👤' : '🖥️';
-                const label = group.type === 'username' ? 'Username' : 'Job ID';
-                
-                html += `<div class="message-item">
-                    <div class="message-header">
-                        <span class="message-${group.type}">${icon} ${label}: ${group.target}</span>
-                        <span>${group.messages.length} message(s)</span>
-                    </div>`;
-                
-                group.messages.forEach(msg => {
-                    console.log('Processing executed message:', msg);
-                    html += `
-                        <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <small style="color: #666;">ID: ${msg.id || 'Unknown'}</small>
-                                ${getStatusBadge(msg)}
-                            </div>
-                            <div class="message-content">${msg.content || msg.data || 'No content'}</div>
-                            <div class="message-time">
-                                Sent: ${msg.timestamp ? formatTime(msg.timestamp) : 'Unknown time'}
-                                ${msg.executedAt ? `• Executed: ${formatTime(msg.executedAt)}` : ''}
-                            </div>
-                        </div>`;
-                });
-                
-                html += '</div>';
-            }
-        }
-        
-        // Display pending user messages
-        if (hasUserMessages) {
-            html += '<h4>👤 Pending User Messages</h4>';
-            for (const [username, messages] of Object.entries(users)) {
-                console.log(`Processing user ${username} with messages:`, messages);
-                
-                if (!Array.isArray(messages)) {
-                    console.warn(`Messages for user ${username} is not an array:`, messages);
-                    continue;
-                }
-                
-                html += `<div class="message-item">
-                    <div class="message-header">
-                        <span class="message-user">👤 ${username}</span>
-                        <span>${messages.length} message(s)</span>
-                    </div>`;
-                
-                messages.forEach(msg => {
-                    console.log('Processing pending user message:', msg);
-                    html += `
-                        <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <small style="color: #666;">ID: ${msg.id || 'Unknown'}</small>
-                                <span class="message-status status-pending">⏳ Pending</span>
-                            </div>
-                            <div class="message-content">${msg.content || msg.data || 'No content'}</div>
-                            <div class="message-time">
-                                Sent: ${msg.timestamp ? formatTime(msg.timestamp) : 'Unknown time'}
-                            </div>
-                        </div>`;
-                });
-                
-                html += '</div>';
-            }
-        }
-        
-        // Display pending job ID messages
-        if (hasJobIdMessages) {
-            html += '<h4>🖥️ Pending Job ID Messages</h4>';
-            for (const [jobId, messages] of Object.entries(jobids)) {
-                console.log(`Processing job ID ${jobId} with messages:`, messages);
-                
-                if (!Array.isArray(messages)) {
-                    console.warn(`Messages for job ID ${jobId} is not an array:`, messages);
-                    continue;
-                }
-                
-                html += `<div class="message-item">
-                    <div class="message-header">
-                        <span class="message-jobid">🖥️ ${jobId}</span>
-                        <span>${messages.length} message(s)</span>
-                    </div>`;
-                
-                messages.forEach(msg => {
-                    console.log('Processing pending job message:', msg);
-                    html += `
-                        <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <small style="color: #666;">ID: ${msg.id || 'Unknown'}</small>
-                                <span class="message-status status-pending">⏳ Pending</span>
-                            </div>
-                            <div class="message-content">${msg.content || msg.data || 'No content'}</div>
-                            <div class="message-time">
-                                Sent: ${msg.timestamp ? formatTime(msg.timestamp) : 'Unknown time'}
-                            </div>
-                        </div>`;
-                });
-                
-                html += '</div>';
-            }
-        }
-    }
-    
-    executionStatusDiv.innerHTML = html;
-    executionStatusDiv.style.display = 'block';
-}
-
+// Modified displayServerStatus function with batch processing
 function displayServerStatus(statusData) {
     console.log('Displaying server status with data:', statusData);
     
@@ -703,6 +476,23 @@ function displayServerStatus(statusData) {
     if (Object.keys(servers).length === 0) {
         html += '<p>No servers currently active.</p>';
     } else {
+        // Collect unique place IDs first
+        const uniquePlaceIds = new Set();
+        const serversByPlaceId = new Map();
+        
+        for (const [jobId, serverInfo] of Object.entries(servers)) {
+            if (serverInfo.placeId) {
+                uniquePlaceIds.add(serverInfo.placeId);
+                
+                if (!serversByPlaceId.has(serverInfo.placeId)) {
+                    serversByPlaceId.set(serverInfo.placeId, []);
+                }
+                serversByPlaceId.get(serverInfo.placeId).push({ jobId, serverInfo });
+            }
+        }
+        
+        console.log(`Found ${uniquePlaceIds.size} unique place IDs out of ${Object.keys(servers).length} servers`);
+        
         for (const [jobId, serverInfo] of Object.entries(servers)) {
             const timeSinceLastPing = Date.now() - (serverInfo.lastPing || 0);
             const isOnline = timeSinceLastPing < 30000; // Consider offline if no ping in 30 seconds
@@ -724,286 +514,69 @@ function displayServerStatus(statusData) {
                     Last ping: ${serverInfo.lastSeen ? formatTime(new Date(serverInfo.lastSeen).getTime()) : 'Never'}
                 </div>
             </div>`;
-
-            // Fetch place info asynchronously
-            if (serverInfo.placeId) {
-                fetchPlaceInfo(serverInfo.placeId).then(placeInfo => {
-                    const placeElement = document.getElementById(`place-${jobId}`);
-                    if (placeElement) {
-                        placeElement.innerHTML = `
-                            <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
-                                ${placeInfo.thumbnailUrl ? `<img src="${placeInfo.thumbnailUrl}" alt="Place thumbnail" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;">` : ''}
-                                <div>
-                                    <div style="font-weight: 500; color: #333;">🎮 ${placeInfo.name}</div>
-                                    <div style="font-size: 11px; color: #666;">Place ID: ${serverInfo.placeId}</div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                });
-            }
         }
+        
+        // Fetch place info for unique IDs only, with rate limiting
+        const placeIds = Array.from(uniquePlaceIds);
+        fetchPlaceInfoBatch(placeIds, serversByPlaceId);
     }
     
     serverStatusDiv.innerHTML = html;
     serverStatusDiv.style.display = 'block';
 }
 
-async function refreshStatus() {
-    console.log('Refreshing status...');
-    const statusData = await fetchExecutionStatus();
-    if (statusData) {
-        displayExecutionStatus(statusData);
-        displayServerStatus(statusData);
-        showStatus('✅ Status refreshed successfully', 'success', 3000);
-    } else {
-        showStatus('❌ Failed to refresh status', 'error');
+// New function to handle batch fetching with rate limiting
+async function fetchPlaceInfoBatch(placeIds, serversByPlaceId) {
+    const BATCH_DELAY = 1000; // 1 second delay between requests
+    
+    for (let i = 0; i < placeIds.length; i++) {
+        const placeId = placeIds[i];
+        
+        try {
+            // Add delay between requests to prevent rate limiting
+            if (i > 0) {
+                await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
+            }
+            
+            const placeInfo = await fetchPlaceInfo(placeId);
+            
+            // Update all servers that use this place ID
+            const serversForPlace = serversByPlaceId.get(placeId) || [];
+            
+            serversForPlace.forEach(({ jobId, serverInfo }) => {
+                const placeElement = document.getElementById(`place-${jobId}`);
+                if (placeElement) {
+                    placeElement.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                            ${placeInfo.thumbnailUrl ? `<img src="${placeInfo.thumbnailUrl}" alt="Place thumbnail" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;">` : ''}
+                            <div>
+                                <div style="font-weight: 500; color: #333;">🎮 ${placeInfo.name}</div>
+                                <div style="font-size: 11px; color: #666;">Place ID: ${placeId}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+        } catch (error) {
+            console.error(`Error fetching place info for ID ${placeId}:`, error);
+        }
     }
 }
 
-// Improved status checking function
-function checkMessageStatus(message, allStatusData) {
-    // If message exists in executedMessages, it's successful
-    if (allStatusData && allStatusData.executedMessages) {
-        const executedMessage = allStatusData.executedMessages.find(msg => msg.id === message.id);
-        if (executedMessage) {
-            return 'success';
-        }
-    }
-    
-    // If message has executedAt timestamp, it's successful
-    if (message.executedAt) {
-        return 'success';
-    }
-    
-    // Otherwise, it's still pending
-    return 'pending';
+// Optional: Function to clear cache if needed
+function clearPlaceInfoCache() {
+    placeInfoCache.clear();
+    console.log('Place info cache cleared');
 }
 
-// Monitor execution status with improved logic
-async function monitorExecution() {
-    if (isMonitoring) {
-        console.log('Already monitoring, skipping...');
-        return;
-    }
-    
-    isMonitoring = true;
-    console.log('Starting execution monitoring...');
-    
-    const startTime = Date.now();
-    const timeout = 60000; // 60 seconds timeout
-    let consecutiveEmptyChecks = 0;
-    let lastExecutedCount = 0;
-    let stableChecks = 0;
-    const maxStableChecks = 3;
-    
-    try {
-        while (Date.now() - startTime < timeout) {
-            const statusData = await fetchExecutionStatus();
-            
-            if (statusData === null) {
-                console.log('Status data is null, retrying...');
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                continue;
-            }
-            
-            displayExecutionStatus(statusData);
-            
-            // executedMessages is at the top level of statusData
-            const executedMessages = statusData.executedMessages || [];
-            const executedCount = executedMessages.length;
-            
-            // users and jobids are inside the message object
-            const messageData = statusData.message || {};
-            
-            // Count pending messages
-            let pendingCount = 0;
-            
-            if (messageData.users) {
-                for (const messages of Object.values(messageData.users)) {
-                    if (Array.isArray(messages)) {
-                        pendingCount += messages.length;
-                    }
-                }
-            }
-            
-            if (messageData.jobids) {
-                for (const messages of Object.values(messageData.jobids)) {
-                    if (Array.isArray(messages)) {
-                        pendingCount += messages.length;
-                    }
-                }
-            }
-            
-            console.log(`Executed: ${executedCount}, Pending: ${pendingCount}`);
-            
-            // Check if we have messages to monitor
-            const totalMessages = executedCount + pendingCount;
-            
-            if (totalMessages === 0) {
-                consecutiveEmptyChecks++;
-                if (consecutiveEmptyChecks >= 3) {
-                    console.log('No messages found after multiple checks, stopping monitoring');
-                    showStatus('ℹ️ No messages to monitor', 'info');
-                    break;
-                }
-            } else {
-                consecutiveEmptyChecks = 0;
-                
-                // Check if executed count is stable and no pending messages
-                if (executedCount === lastExecutedCount && pendingCount === 0 && executedCount > 0) {
-                    stableChecks++;
-                } else {
-                    stableChecks = 0;
-                    lastExecutedCount = executedCount;
-                }
-                
-                // If no pending messages and we have executed messages
-                if (pendingCount === 0 && executedCount > 0 && stableChecks >= maxStableChecks) {
-                    showStatus(`✅ All ${executedCount} message(s) executed successfully!`, 'success');
-                    break;
-                }
-                
-                // If we have pending messages, show status
-                if (pendingCount > 0) {
-                    showStatus(`⏳ ${pendingCount} message(s) pending, ${executedCount} executed`, 'info', 2000);
-                }
-            }
-            
-            // Wait before next check
-            await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-        
-        // Handle timeout
-        if (Date.now() - startTime >= timeout) {
-            showStatus('⏰ Monitoring timeout - some messages may still be processing', 'warning');
-        }
-        
-    } finally {
-        isMonitoring = false;
-        console.log('Monitoring stopped');
-    }
+// Optional: Function to get cache statistics
+function getCacheStats() {
+    return {
+        size: placeInfoCache.size,
+        ids: Array.from(placeInfoCache.keys())
+    };
 }
-        
-// Handle username form submission
-document.getElementById('usernameForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const username = document.getElementById('username').value.trim();
-    const dataString = document.getElementById('usernameData').value.trim();
-    const sendBtn = document.getElementById('sendUsernameBtn');
-    
-    if (!username || !dataString) {
-        showStatus('Please fill in all fields', 'error');
-        return;
-    }
-    
-    sendBtn.disabled = true;
-    sendBtn.innerHTML = '<span class="loading"></span>Sending...';
-    
-    try {
-        const requestData = {
-            username: username,
-            data: dataString,
-            timestamp: new Date().toISOString()
-        };
-        
-        console.log('Sending username request:', requestData);
-        
-        const response = await fetch(defaultServerUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': 'RobloxStudio/1.0',
-                'Referer': 'https://www.roblox.com'
-            },
-            body: JSON.stringify(requestData),
-            mode: 'cors'
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
-        const responseData = await response.json();
-        console.log('Username response:', responseData);
-        
-        if (responseData.success) {
-            showStatus(`✅ Data sent to username "${username}"! Monitoring execution...`, 'success');
-            // Wait a bit before starting monitoring to let the server process
-            setTimeout(() => monitorExecution(), 2000);
-        } else {
-            showStatus(`❌ Server error: ${responseData.error || 'Unknown error'}`, 'error');
-        }
-    } catch (error) {
-        console.error('Username request error:', error);
-        showStatus(`❌ Request failed: ${error.message}`, 'error');
-    } finally {
-        sendBtn.disabled = false;
-        sendBtn.innerHTML = 'Send to Username';
-    }
-});
-
-// Handle job ID form submission
-document.getElementById('jobidForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const jobId = document.getElementById('jobid').value.trim();
-    const dataString = document.getElementById('jobidData').value.trim();
-    const sendBtn = document.getElementById('sendJobidBtn');
-    
-    if (!jobId || !dataString) {
-        showStatus('Please fill in all fields', 'error');
-        return;
-    }
-    
-    sendBtn.disabled = true;
-    sendBtn.innerHTML = '<span class="loading"></span>Sending...';
-    
-    try {
-        const requestData = {
-            jobId: jobId,
-            data: dataString,
-            timestamp: new Date().toISOString()
-        };
-        
-        console.log('Sending job ID request:', requestData);
-        
-        const response = await fetch(defaultServerUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': 'RobloxStudio/1.0',
-                'Referer': 'https://www.roblox.com'
-            },
-            body: JSON.stringify(requestData),
-            mode: 'cors'
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
-        const responseData = await response.json();
-        console.log('Job ID response:', responseData);
-        
-        if (responseData.success) {
-            showStatus(`✅ Data sent to Job ID "${jobId}"! Monitoring execution...`, 'success');
-            // Wait a bit before starting monitoring to let the server process
-            setTimeout(() => monitorExecution(), 2000);
-        } else {
-            showStatus(`❌ Server error: ${responseData.error || 'Unknown error'}`, 'error');
-        }
-    } catch (error) {
-        console.error('Job ID request error:', error);
-        showStatus(`❌ Request failed: ${error.message}`, 'error');
-    } finally {
-        sendBtn.disabled = false;
-        sendBtn.innerHTML = 'Send to Job ID';
-    }
-});
     </script>
 </body>
 </html>
