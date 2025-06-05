@@ -450,10 +450,20 @@ function getStatusBadge(message, allStatusData) {
 
 async function fetchPlaceInfo(placeId) {
     try {
-        const response = await fetch(`https://games.roblox.com/v1/games?universeIds=${placeId}`);
-        const data = await response.json();
-        if (data.data && data.data[0]) {
-            const game = data.data[0];
+        // First get the universe ID from place ID
+        const universeResponse = await fetch(`https://apis.roblox.com/universes/v1/places/${placeId}/universe`);
+        const universeData = await universeResponse.json();
+        
+        if (!universeData.universeId) {
+            throw new Error('No universe ID found');
+        }
+        
+        // Then get game info from universe ID
+        const gameResponse = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeData.universeId}`);
+        const gameData = await gameResponse.json();
+        
+        if (gameData.data && gameData.data[0]) {
+            const game = gameData.data[0];
             return {
                 name: game.name,
                 thumbnailUrl: `https://www.roblox.com/asset-thumbnail/image?assetId=${placeId}&width=150&height=150&format=png`
@@ -673,20 +683,6 @@ function displayServerStatus(statusData) {
             const isOnline = timeSinceLastPing < 30000; // Consider offline if no ping in 30 seconds
             
             // REPLACE THIS ENTIRE BLOCK:
-            html += `<div class="server-item">
-                <div class="server-header">
-                    <span class="server-jobid">🖥️ ${jobId}</span>
-                    <span style="color: ${isOnline ? '#059669' : '#dc2626'}; font-weight: 600;">
-                        ${isOnline ? '🟢 Online' : '🔴 Offline'}
-                    </span>
-                </div>
-                <div class="server-players">
-                    👥 ${serverInfo.playerCount || 0} players: ${(serverInfo.players || []).join(', ') || 'None'}
-                </div>
-                <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                    Last ping: ${serverInfo.lastSeen ? formatTime(new Date(serverInfo.lastSeen).getTime()) : 'Never'}
-                </div>
-            </div>`;
 
             // WITH THIS NEW BLOCK:
             html += `<div class="server-item">
