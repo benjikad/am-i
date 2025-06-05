@@ -450,20 +450,10 @@ function getStatusBadge(message, allStatusData) {
 
 async function fetchPlaceInfo(placeId) {
     try {
-        // First get the universe ID from place ID
-        const universeResponse = await fetch(`https://apis.roblox.com/universes/v1/places/${placeId}/universe`);
-        const universeData = await universeResponse.json();
-        
-        if (!universeData.universeId) {
-            throw new Error('No universe ID found');
-        }
-        
-        // Then get game info from universe ID
-        const gameResponse = await fetch(`https://games.roblox.com/v1/games?universeIds=${universeData.universeId}`);
-        const gameData = await gameResponse.json();
-        
-        if (gameData.data && gameData.data[0]) {
-            const game = gameData.data[0];
+        const response = await fetch(`https://games.roblox.com/v1/games?universeIds=${placeId}`);
+        const data = await response.json();
+        if (data.data && data.data[0]) {
+            const game = data.data[0];
             return {
                 name: game.name,
                 thumbnailUrl: `https://www.roblox.com/asset-thumbnail/image?assetId=${placeId}&width=150&height=150&format=png`
@@ -538,49 +528,53 @@ function displayExecutionStatus(statusData) {
     if (!hasExecutedMessages && !hasUserMessages && !hasJobIdMessages) {
         html += '<p>No messages found.</p>';
     } else {
-        for (const [jobId, serverInfo] of Object.entries(servers)) {
-            const timeSinceLastPing = Date.now() - (serverInfo.lastPing || 0);
-            const isOnline = timeSinceLastPing < 30000; // Consider offline if no ping in 30 seconds
+        // Display executed messages (successful)
+        if (hasExecutedMessages) {
+            html += '<h4>📨 Executed Messages</h4>';
             
-
-            // WITH THIS NEW BLOCK:
-            html += `<div class="server-item">
-                <div class="server-header">
-                    <span class="server-jobid">🖥️ ${jobId}</span>
-                    <span style="color: ${isOnline ? '#059669' : '#dc2626'}; font-weight: 600;">
-                        ${isOnline ? '🟢 Online' : '🔴 Offline'}
-                    </span>
-                </div>
-                <div class="server-players">
-                    👥 ${serverInfo.playerCount || 0} players: ${(serverInfo.players || []).join(', ') || 'None'}
-                </div>
-                <div class="server-place" id="place-${jobId}">
-                    🎮 Loading place info...
-                </div>
-                <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                    Last ping: ${serverInfo.lastSeen ? formatTime(new Date(serverInfo.lastSeen).getTime()) : 'Never'}
-                </div>
-            </div>`;
-
-            // Fetch place info asynchronously
-            if (serverInfo.placeId) {
-                fetchPlaceInfo(serverInfo.placeId).then(placeInfo => {
-                    const placeElement = document.getElementById(`place-${jobId}`);
-                    if (placeElement) {
-                        placeElement.innerHTML = `
-                            <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
-                                ${placeInfo.thumbnailUrl ? `<img src="${placeInfo.thumbnailUrl}" alt="Place thumbnail" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;">` : ''}
-                                <div>
-                                    <div style="font-weight: 500; color: #333;">🎮 ${placeInfo.name}</div>
-                                    <div style="font-size: 11px; color: #666;">Place ID: ${serverInfo.placeId}</div>
-                                </div>
+            const groupedMessages = {};
+            
+            executedMessages.forEach(msg => {
+                const key = `${msg.type}-${msg.target}`;
+                if (!groupedMessages[key]) {
+                    groupedMessages[key] = {
+                        type: msg.type,
+                        target: msg.target,
+                        messages: []
+                    };
+                }
+                groupedMessages[key].messages.push(msg);
+            });
+            
+            for (const [key, group] of Object.entries(groupedMessages)) {
+                const icon = group.type === 'username' ? '👤' : '🖥️';
+                const label = group.type === 'username' ? 'Username' : 'Job ID';
+                
+                html += `<div class="message-item">
+                    <div class="message-header">
+                        <span class="message-${group.type}">${icon} ${label}: ${group.target}</span>
+                        <span>${group.messages.length} message(s)</span>
+                    </div>`;
+                
+                group.messages.forEach(msg => {
+                    console.log('Processing executed message:', msg);
+                    html += `
+                        <div style="margin-left: 15px; margin-bottom: 10px; padding: 10px; background: white; border-radius: 6px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <small style="color: #666;">ID: ${msg.id || 'Unknown'}</small>
+                                ${getStatusBadge(msg)}
                             </div>
-                        `;
-                    }
+                            <div class="message-content">${msg.content || msg.data || 'No content'}</div>
+                            <div class="message-time">
+                                Sent: ${msg.timestamp ? formatTime(msg.timestamp) : 'Unknown time'}
+                                ${msg.executedAt ? `• Executed: ${formatTime(msg.executedAt)}` : ''}
+                            </div>
+                        </div>`;
                 });
+                
+                html += '</div>';
             }
         }
-    }
         
         // Display pending user messages
         if (hasUserMessages) {
