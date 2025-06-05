@@ -714,15 +714,39 @@ async function refreshStatus() {
 
 // Improved status checking function
 function checkMessageStatus(ran) {
-    // Convert to string and normalize
-    const normalizedRan = String(ran).toLowerCase();
-    
-    if (normalizedRan === 'true' || normalizedRan === '1' || ran === true) {
-        return 'success';
-    } else if (normalizedRan === 'false' || normalizedRan === '0' || ran === false) {
-        return 'failed';
-    } else if (normalizedRan === 'null' || normalizedRan === 'undefined' || ran === null || ran === undefined || normalizedRan === '') {
+    // Handle null/undefined/empty cases first
+    if (ran === null || ran === undefined || ran === '') {
         return 'pending';
+    }
+    
+    // Handle boolean values directly
+    if (ran === true) {
+        return 'success';
+    }
+    if (ran === false) {
+        return 'failed';
+    }
+    
+    // Handle string representations
+    if (typeof ran === 'string') {
+        const normalizedRan = ran.toLowerCase().trim();
+        
+        if (normalizedRan === 'true' || normalizedRan === '1') {
+            return 'success';
+        } else if (normalizedRan === 'false' || normalizedRan === '0') {
+            return 'failed';
+        } else if (normalizedRan === 'null' || normalizedRan === 'undefined') {
+            return 'pending';
+        }
+    }
+    
+    // Handle number values
+    if (typeof ran === 'number') {
+        if (ran === 1) {
+            return 'success';
+        } else if (ran === 0) {
+            return 'failed';
+        }
     }
     
     return 'unknown';
