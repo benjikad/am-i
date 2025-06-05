@@ -707,9 +707,6 @@ function displayServerStatus(statusData) {
             const timeSinceLastPing = Date.now() - (serverInfo.lastPing || 0);
             const isOnline = timeSinceLastPing < 30000; // Consider offline if no ping in 30 seconds
             
-            // REPLACE THIS ENTIRE BLOCK:
-
-            // WITH THIS NEW BLOCK:
             html += `<div class="server-item">
                 <div class="server-header">
                     <span class="server-jobid">🖥️ ${jobId}</span>
@@ -717,11 +714,11 @@ function displayServerStatus(statusData) {
                         ${isOnline ? '🟢 Online' : '🔴 Offline'}
                     </span>
                 </div>
-                <div class="server-players">
-                    👥 ${serverInfo.playerCount || 0} players: ${(serverInfo.players || []).join(', ') || 'None'}
-                </div>
                 <div class="server-place" id="place-${jobId}">
                     🎮 Loading place info...
+                </div>
+                <div class="server-players">
+                    👥 ${serverInfo.playerCount || 0} players: ${(serverInfo.players || []).join(', ') || 'None'}
                 </div>
                 <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
                     Last ping: ${serverInfo.lastSeen ? formatTime(new Date(serverInfo.lastSeen).getTime()) : 'Never'}
