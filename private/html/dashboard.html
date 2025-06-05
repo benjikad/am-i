@@ -791,7 +791,7 @@ function displayServerStatus(statusData) {
         
         for (const [jobId, serverInfo] of Object.entries(servers)) {
             const timeSinceLastPing = Date.now() - (serverInfo.lastPing || 0);
-            const isOnline = timeSinceLastPing < 30000; // Consider offline if no ping in 30 seconds
+            const isOnline = timeSinceLastPing < 10000; // Consider offline if no ping in 30 seconds
             
             html += `<div class="server-item">
                 <div class="server-header">
