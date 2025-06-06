@@ -789,7 +789,10 @@ function displayServerStatus(statusData) {
         
         console.log(`Found ${uniquePlaceIds.size} unique place IDs out of ${Object.keys(servers).length} servers`);
         
-        for (const [jobId, serverInfo] of Object.entries(servers)) {
+        // Sort servers alphabetically by jobId
+        const sortedServers = Object.entries(servers).sort(([jobIdA], [jobIdB]) => jobIdA.localeCompare(jobIdB));
+        
+        for (const [jobId, serverInfo] of sortedServers) {
             const timeSinceLastPing = Date.now() - (serverInfo.lastPing || 0);
             const isOnline = timeSinceLastPing < 10000; // Consider offline if no ping in 30 seconds
             
@@ -820,7 +823,6 @@ function displayServerStatus(statusData) {
     serverStatusDiv.innerHTML = html;
     serverStatusDiv.style.display = 'block';
 }
-
 async function refreshStatus() {
     console.log('Refreshing status...');
     const statusData = await fetchExecutionStatus();
