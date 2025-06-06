@@ -72,6 +72,35 @@ function cleanupOldMessages(data) {
   );
 }
 
+function cleanupInactiveServers(data) {
+  const now = Date.now();
+  const maxInactiveTime = 5 * 60 * 1000; // 5 minutes
+  
+  const serversToRemove = [];
+  
+  // Find servers that haven't pinged in over 5 minutes
+  for (const jobId in data.servers) {
+    const server = data.servers[jobId];
+    if (now - server.lastPing > maxInactiveTime) {
+      serversToRemove.push(jobId);
+    }
+  }
+  
+  // Remove inactive servers
+  for (const jobId of serversToRemove) {
+    console.log(`Removing inactive server: ${jobId} (last ping: ${new Date(data.servers[jobId].lastPing).toISOString()})`);
+    delete data.servers[jobId];
+    
+    // Also clean up any pending messages for this server
+    if (data.jobIdMessages[jobId]) {
+      console.log(`Cleaning up ${data.jobIdMessages[jobId].length} pending messages for inactive server: ${jobId}`);
+      delete data.jobIdMessages[jobId];
+    }
+  }
+  
+  return serversToRemove.length > 0;
+}
+
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -99,8 +128,14 @@ export default async function handler(req, res) {
     
     const data = readData();
     
-    // Clean up old messages periodically
+    // Clean up old messages and inactive servers periodically
     cleanupOldMessages(data);
+    const serversRemoved = cleanupInactiveServers(data);
+    
+    // Write data back if servers were removed
+    if (serversRemoved) {
+      writeData(data);
+    }
 
     switch (body.action) {
       case 'ping':
@@ -286,7 +321,6 @@ export default async function handler(req, res) {
 
         return res.status(400).json({ error: 'Invalid request' });
     }
-
   } catch (error) {
     console.error('API Error:', error);
     return res.status(500).json({ error: 'Internal server error' });
