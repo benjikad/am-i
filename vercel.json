@@ -3,7 +3,11 @@
     {
       "source": "/api", 
       "destination": "/api/main.js"
-    }, 
+    },
+    {
+      "source": "/api/region",
+      "destination": "/api/region.js"
+    },
     {
       "source": "/api/login",
       "destination": "/api/login.js"
