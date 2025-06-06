@@ -140,7 +140,7 @@ export default async function handler(req, res) {
     switch (body.action) {
       case 'ping':
         // Handle ping from Roblox server - update server info and return messages
-        const { jobId, placeId, playerCount, players, timestamp, region = 'unknown' } = body;
+        const { jobId, placeId, playerCount, players, timestamp} = body;
         
         console.log('Ping received from jobId:', jobId); // Debug logging
         
@@ -152,7 +152,7 @@ export default async function handler(req, res) {
         // Update server info
         data.servers[jobId] = {
           placeId: placeId || 'unknown',
-          region: region || 'unknown',
+          // region: region || 'unknown',
           playerCount: playerCount || 0,
           players: players || [],
           lastPing: Date.now(),
