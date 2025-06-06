@@ -823,7 +823,7 @@ function displayServerStatus(statusData) {
                 <div class="server-players">
                     👥 ${serverInfo.playerCount || 0} players: ${(serverInfo.players || []).join(', ') || 'None'}
                 </div>
-                <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                <div style="font-size: 12px; color: #6b7280; margin-top: 8px; margin-bottom: 50px;">
                     Last ping: ${serverInfo.lastSeen ? formatTime(new Date(serverInfo.lastSeen).getTime()) : 'Never'}
                 </div>
                 <a href="roblox://placeID=${serverInfo.placeId}&gameInstanceId=${jobId}" 
