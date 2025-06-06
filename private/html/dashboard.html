@@ -820,6 +820,9 @@ function displayServerStatus(statusData) {
                 <div class="server-place" id="place-${jobId}">
                     🎮 Loading place info...
                 </div>
+                <div class="server-region" style="margin-bottom: 8px;">
+                    🌍 Region: ${serverInfo.region || '?'}
+                </div>
                 <div class="server-players" style="margin-bottom: 40px;">
                     👥 ${serverInfo.playerCount || 0} players: ${(serverInfo.players || []).join(', ') || 'None'}
                 </div>
