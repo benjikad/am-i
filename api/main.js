@@ -72,7 +72,7 @@ function cleanupOldMessages(data) {
   );
 }
 
-function cleanupInactiveServers(data) {
+function cleanupInactiveServers(data) {a
   const now = Date.now();
   const maxInactiveTime = 5 * 60 * 1000; // 5 minutes
   
@@ -152,6 +152,7 @@ export default async function handler(req, res) {
         // Update server info
         data.servers[jobId] = {
           placeId: placeId || 'unknown',
+          region: region || 'unknown',
           playerCount: playerCount || 0,
           players: players || [],
           lastPing: Date.now(),
