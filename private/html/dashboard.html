@@ -811,7 +811,7 @@ function displayServerStatus(statusData) {
                     <span class="server-jobid">🖥️ ${jobId}</span>
                     <div style="position: relative; display: inline-block; margin-left: 8px;">
                         <button onclick="copyJobId('${jobId}', this)" style="padding: 6px 10px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.1s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'" title="Copy Job ID">📋</button>
-                        <div id="copied-${jobId}" style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.1s;">Copied to clipboard!</div>
+<div id="copied-${jobId}" style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s;">Copied to clipboard!</div>
                     </div>
                     <span style="color: ${isOnline ? '#059669' : '#dc2626'}; font-weight: 600;">
                         ${isOnline ? '🟢 Online' : '🔴 Offline'}
