@@ -140,7 +140,7 @@ export default async function handler(req, res) {
     switch (body.action) {
       case 'ping':
         // Handle ping from Roblox server - update server info and return messages
-        const { jobId, placeId, playerCount, players, timestamp, reguin = 'Unknown'} = body;
+        const { jobId, placeId, playerCount, players, timestamp, region = 'Unknown'} = body;
         
         console.log('Ping received from jobId:', jobId); // Debug logging
         
