@@ -1189,7 +1189,7 @@ async function handleLogout() {
             showStatus('✅ Logged out successfully', 'success', 2000);
             // Redirect to login page after a brief delay
             setTimeout(() => {
-                window.location.href = '/login.html'; // Adjust this path as needed
+                window.location.href = '/login'; // Adjust this path as needed
             }, 1000);
         } else {
             throw new Error('Logout failed');
