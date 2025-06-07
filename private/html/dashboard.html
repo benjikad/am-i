@@ -317,6 +317,49 @@
                 font-size: 0.9em;
             }
         }
+        .logout-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.4);
+        }
+        
+        .logout-btn:active {
+            transform: translateY(0);
+        }
+        
+        .logout-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        @media (max-width: 768px) {
+            .logout-btn {
+                bottom: 10px;
+                left: 10px;
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -377,6 +420,9 @@
     </div>
 
     <div id="statusContainer" class="status-container"></div>
+    <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">
+        Logout
+    </button>
 
     <script>
         const statusContainer = document.getElementById('statusContainer');
@@ -1117,6 +1163,44 @@ document.getElementById('jobidForm').addEventListener('submit', async (e) => {
         sendBtn.innerHTML = 'Send to Job ID';
     }
 });
+
+        // Handle logout functionality
+async function handleLogout() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    // Show confirmation
+    if (!confirm('Are you sure you want to logout?')) {
+        return;
+    }
+    
+    logoutBtn.disabled = true;
+    logoutBtn.innerHTML = '<span class="loading"></span>Logging out...';
+    
+    try {
+        const response = await fetch('/api/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            showStatus('✅ Logged out successfully', 'success', 2000);
+            // Redirect to login page after a brief delay
+            setTimeout(() => {
+                window.location.href = '/login.html'; // Adjust this path as needed
+            }, 1000);
+        } else {
+            throw new Error('Logout failed');
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+        showStatus('❌ Logout failed', 'error');
+        logoutBtn.disabled = false;
+        logoutBtn.innerHTML = '🚪 Logout';
+    }
+}
     </script>
 </body>
 </html>
