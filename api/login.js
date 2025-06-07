@@ -6,7 +6,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-t
 const ADMIN_USERS = {
   'benjikad': '6a25e3e9-a6de-45b1-8ad0-772e169303ed',
   'ben': '6dgamepl@y',
-  // 'gabe': 'gabeisgud',
+  'gaber': 'gabeisgud',
+  'tygo': 'cheese',
 };
 
 export default async function handler(req, res) {
