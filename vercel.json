@@ -5,6 +5,10 @@
       "destination": "/api/main.js"
     },
     {
+      "source": "/api/logout", 
+      "destination": "/api/logout.js"
+    },
+    {
       "source": "/api/region",
       "destination": "/api/region.js"
     },
