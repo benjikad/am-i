@@ -17,7 +17,7 @@
       "destination": "/api/login.js"
     },
     {
-      "source": "/api/reverify",
+      "source": "/reverify",
       "destination": "/private/html/reverify.html"
     },
     {
