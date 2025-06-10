@@ -337,42 +337,57 @@
             <p>Send data to your Roblox server endpoint</p>
         </div>
 
-        <div class="status-bar">
-            <div class="status-item">👤 Username</div>
-            <div class="status-item">🖥️ Job ID</div>
-            <div class="status-item">📊 Status</div>
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('username')">👤 Username</button>
+            <button class="tab-btn" onclick="showTab('jobid')">🖥️ Job ID</button>
+            <button class="tab-btn" onclick="showTab('status')">📊 Status</button>
         </div>
 
-        <div class="form-section">
-            <div class="form-group">
-                <label for="username1">Username</label>
-                <input type="text" id="username1" placeholder="Enter username">
-            </div>
+        <!-- Username Tab -->
+        <div id="username-tab" class="tab-content active">
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="username1">Username</label>
+                    <input type="text" id="username1" placeholder="Enter username">
+                </div>
 
-            <div class="form-group">
-                <label for="dataString1">Data String</label>
-                <textarea id="dataString1" placeholder="Enter data to send" rows="3"></textarea>
-            </div>
+                <div class="form-group">
+                    <label for="dataString1">Data String</label>
+                    <textarea id="dataString1" placeholder="Enter data to send" rows="3"></textarea>
+                </div>
 
-            <button class="btn" onclick="sendToUsername()">Send to Username</button>
+                <button class="btn" onclick="sendToUsername()">Send to Username</button>
+            </div>
         </div>
 
-        <div class="form-section">
-            <div class="form-group">
-                <label for="jobId">Job ID</label>
-                <input type="text" id="jobId" placeholder="Enter job ID">
-            </div>
+        <!-- Job ID Tab -->
+        <div id="jobid-tab" class="tab-content">
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="jobId">Job ID</label>
+                    <input type="text" id="jobId" placeholder="Enter job ID">
+                </div>
 
-            <div class="form-group">
-                <label for="dataString2">Data String</label>
-                <textarea id="dataString2" placeholder="Enter data to send" rows="3"></textarea>
-            </div>
+                <div class="form-group">
+                    <label for="dataString2">Data String</label>
+                    <textarea id="dataString2" placeholder="Enter data to send" rows="3"></textarea>
+                </div>
 
-            <button class="btn" onclick="sendToJobId()">Send to Job ID</button>
+                <button class="btn" onclick="sendToJobId()">Send to Job ID</button>
+            </div>
         </div>
 
-        <div class="refresh-section">
-            <button class="btn refresh-btn" onclick="refreshStatus()">🔄 Refresh Status</button>
+        <!-- Status Tab -->
+        <div id="status-tab" class="tab-content">
+            <div class="form-section">
+                <div class="refresh-section">
+                    <button class="btn refresh-btn" onclick="refreshStatus()">🔄 Refresh Status</button>
+                </div>
+                <div id="statusDisplay" style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 10px; color: #666;">
+                    Status information will appear here...
+                </div>
+            </div>
         </div>
 
         <div class="logout-section">
@@ -516,6 +531,9 @@
                     isAuthenticated = true;
                     currentUser = data.user;
                     showMainApp();
+                    
+                    // Set up auth checks for this newly authenticated session
+                    setupAuthCheck();
                 } else {
                     showError(data.message || 'Authentication failed');
                 }
