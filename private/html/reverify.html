@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication Overlay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: transparent;
+        }
+
+        /* Overlay for blocking access */
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .reverify-modal {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .reverify-modal h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .reverify-modal p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #dc3545;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hidden by default, shown when auth fails */
+        .auth-overlay.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Overlay -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="reverify-modal">
+            <h2>Session Expired</h2>
+            <p>Your session has expired. Please log in again to continue.</p>
+            
+            <form id="reverifyForm">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="btn" id="loginBtn">Log In</button>
+                
+                <div id="errorMessage" class="error-message"></div>
+                <div id="loading" class="loading"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class AuthManager {
+            constructor() {
+                this.loginUrl = 'https://am-i-three.vercel.app/api/login';
+                this.verifyUrl = 'https://am-i-three.vercel.app/api/verify';
+                this.checkInterval = 5 * 60 * 1000; // Check every 5 minutes
+                this.init();
+            }
+
+            init() {
+                // Check authentication on page load
+                this.checkAuth();
+                
+                // Set up periodic auth checking
+                setInterval(() => this.checkAuth(), this.checkInterval);
+                
+                // Set up form submission
+                document.getElementById('reverifyForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleLogin();
+                });
+            }
+
+            async checkAuth() {
+                try {
+                    const response = await fetch(this.verifyUrl, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.authenticated) {
+                        // Token is valid, hide overlay
+                        this.hideOverlay();
+                    } else {
+                        // Token is invalid or expired, show overlay
+                        this.showOverlay();
+                    }
+                } catch (error) {
+                    console.error('Auth check failed:', error);
+                    this.showOverlay();
+                }
+            }
+
+            showOverlay() {
+                document.getElementById('authOverlay').classList.remove('hidden');
+                document.getElementById('username').focus();
+            }
+
+            hideOverlay() {
+                document.getElementById('authOverlay').classList.add('hidden');
+                this.clearForm();
+            }
+
+            async handleLogin() {
+                const loginBtn = document.getElementById('loginBtn');
+                const errorMessage = document.getElementById('errorMessage');
+                const loading = document.getElementById('loading');
+
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                // Reset UI
+                errorMessage.style.display = 'none';
+                loginBtn.disabled = true;
+                loading.style.display = 'block';
+
+                try {
+                    const response = await fetch(this.loginUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            username,
+                            password
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        this.hideOverlay();
+                    } else {
+                        this.showError(data.message || 'Login failed');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    this.showError('Network error. Please try again.');
+                } finally {
+                    loginBtn.disabled = false;
+                    loading.style.display = 'none';
+                }
+            }
+
+            showError(message) {
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+            }
+
+            clearForm() {
+                document.getElementById('reverifyForm').reset();
+                document.getElementById('errorMessage').style.display = 'none';
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new AuthManager();
+        });
+
+        // Check auth when page becomes visible
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && window.authManager) {
+                window.authManager.checkAuth();
+            }
+        });
+    </script>
+</body>
+</html>
